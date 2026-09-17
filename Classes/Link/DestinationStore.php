@@ -44,7 +44,9 @@ final class DestinationStore
         $previous = $this->find($reference);
         $data = ['instance_uuid' => $reference['instance'], 'page_uuid' => $reference['page'],
             'language_id' => $reference['language'], 'status' => $status,
-            'url' => $url ?? $previous['url'] ?? '', 'checked_at' => time()];
+            'url' => $url ?? $previous['url'] ?? '', 'checked_at' => time(),
+            'generation' => bin2hex(random_bytes(16)), 'lease_token' => '', 'lease_until' => 0,
+            'next_refresh' => time() + 180, 'attempts' => 0, 'refresh_paused' => 0, 'refresh_error' => ''];
         if ($previous === null) {
             try {
                 $connection->insert(self::TABLE, $key + $data);
@@ -57,5 +59,74 @@ final class DestinationStore
         if ($previous === null || $previous['status'] !== $status || $previous['url'] !== $data['url']) {
             $this->cache->flushCachesInGroupByTag('pages', self::tag($reference));
         }
+    }
+
+    public static function peerTag(string $instance): string
+    {
+        return 'exchange_peer_' . $instance;
+    }
+
+    public static function reference(array $row): array
+    {
+        return ['instance' => $row['instance_uuid'], 'page' => $row['page_uuid'], 'language' => (int)$row['language_id']];
+    }
+
+    /** Lease a small batch. Competing workers and newer save-time resolutions win via generation checks. */
+    public function claim(string $instance, int $limit): array
+    {
+        $db = $this->connections->getConnectionForTable(self::TABLE);
+        $now = time();
+        $rows = $db->executeQuery('SELECT * FROM ' . self::TABLE
+            . ' WHERE instance_uuid = ? AND refresh_paused = 0 AND next_refresh <= ? AND lease_until <= ?'
+            . ' ORDER BY next_refresh, reference_key LIMIT ' . max(1, min(50, $limit)), [$instance, $now, $now])->fetchAllAssociative();
+        $claimed = [];
+        foreach ($rows as $row) {
+            $token = bin2hex(random_bytes(16));
+            if ($db->executeStatement('UPDATE ' . self::TABLE . ' SET lease_token = ?, lease_until = ?'
+                . ' WHERE reference_key = ? AND generation = ? AND lease_until <= ? AND refresh_paused = 0 AND next_refresh <= ?',
+                [$token, $now + 120, $row['reference_key'], $row['generation'], $now, $now]) === 1) {
+                $row['lease_token'] = $token;
+                $claimed[] = $row;
+            }
+        }
+        return $claimed;
+    }
+
+    /** Only verified unavailable responses suppress links; transport failures preserve confirmed negative states too. */
+    public function finish(array $row, ?array $result, string $peerHash): bool
+    {
+        $reference = self::reference($row);
+        $status = $result['status'] ?? ($row['status'] === 'resolved' ? 'stale' : $row['status']);
+        $attempts = $result === null ? min(16, (int)$row['attempts'] + 1) : 0;
+        $url = $status === 'resolved' && $result !== null ? $result['url'] : $row['url'];
+        $data = ['status' => $status, 'url' => $url, 'checked_at' => time(),
+            'next_refresh' => time() + ($attempts ? min(3600, 60 * (2 ** ($attempts - 1))) : 180),
+            'attempts' => $attempts, 'lease_token' => '', 'lease_until' => 0,
+            'peer_hash' => $peerHash, 'refresh_error' => $result === null ? 'transient' : ''];
+        $updated = $this->connections->getConnectionForTable(self::TABLE)->update(self::TABLE, $data,
+            ['reference_key' => $row['reference_key'], 'generation' => $row['generation'], 'lease_token' => $row['lease_token']]);
+        if ($updated && ($status !== $row['status'] || $url !== $row['url'])) {
+            $this->cache->flushCachesInGroupByTag('pages', self::tag($reference));
+        }
+        return $updated === 1;
+    }
+
+    /** Denial concerns the connection, including destinations outside the current bounded batch. */
+    public function deny(string $instance, string $peerHash): void
+    {
+        $this->connections->getConnectionForTable(self::TABLE)->update(self::TABLE,
+            ['status' => 'denied', 'refresh_paused' => 1, 'refresh_error' => 'denied', 'peer_hash' => $peerHash,
+                'generation' => bin2hex(random_bytes(16)), 'lease_token' => '', 'lease_until' => 0, 'checked_at' => time()],
+            ['instance_uuid' => $instance]);
+        $this->cache->flushCachesInGroupByTag('pages', self::peerTag($instance));
+    }
+
+    /** A corrected connection rechecks each identity; it does not restore clickability without verification. */
+    public function resume(string $instance, string $peerHash, bool $force = false): void
+    {
+        $this->connections->getConnectionForTable(self::TABLE)->executeStatement('UPDATE ' . self::TABLE
+            . ' SET refresh_paused = 0, next_refresh = 0, attempts = 0'
+            . ' WHERE instance_uuid = ? AND refresh_paused = 1' . ($force ? '' : ' AND peer_hash <> ?'),
+            $force ? [$instance] : [$instance, $peerHash]);
     }
 }

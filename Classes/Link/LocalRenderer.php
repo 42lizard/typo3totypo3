@@ -16,7 +16,7 @@ final class LocalRenderer
     public function url(array $details, ServerRequestInterface $request, string $text): string
     {
         if ((new ManagedLink())->resolveHandlerData($details)['valid']) {
-            $request->getAttribute('frontend.cache.collector')?->addCacheTags(new CacheTag(DestinationStore::tag($details)));
+            $request->getAttribute('frontend.cache.collector')?->addCacheTags(new CacheTag(DestinationStore::tag($details), 300), new CacheTag(DestinationStore::peerTag($details['instance']), 300));
             $destination = $this->destinations->find($details);
             if ($destination && in_array($destination['status'], ['resolved', 'stale'], true)) {
                 try {

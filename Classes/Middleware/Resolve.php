@@ -81,7 +81,7 @@ final class Resolve implements MiddlewareInterface
             }
             $results = [];
             foreach ($items as $item) {
-                $results[] = $this->resolver->resolve($item, $byReference, $grant['sites'], $config['instance']);
+                $results[] = $this->resolver->resolve($item, $byReference, $grant['sites'], $config['instance'], $config['publicAliases'] ?? []);
             }
             return $this->response(['protocol' => 1, 'instance' => $config['instance'], 'results' => $results]);
         } catch (\Throwable $exception) {

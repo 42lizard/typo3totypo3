@@ -13,6 +13,15 @@ CREATE TABLE tx_typo3totypo3_destination (
     status varchar(16) NOT NULL,
     url text NOT NULL,
     checked_at int unsigned NOT NULL DEFAULT 0,
+    generation varchar(32) NOT NULL DEFAULT '',
+    lease_token varchar(32) NOT NULL DEFAULT '',
+    lease_until int unsigned NOT NULL DEFAULT 0,
+    next_refresh int unsigned NOT NULL DEFAULT 0,
+    attempts int unsigned NOT NULL DEFAULT 0,
+    refresh_paused smallint unsigned NOT NULL DEFAULT 0,
+    peer_hash varchar(64) NOT NULL DEFAULT '',
+    refresh_error varchar(32) NOT NULL DEFAULT '',
+    KEY due_refresh (instance_uuid, refresh_paused, next_refresh),
     PRIMARY KEY (reference_key)
 );
 

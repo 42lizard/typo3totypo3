@@ -28,7 +28,7 @@ final class PageResolver
         private readonly PageIdentity $identities,
     ) {}
 
-    public function resolve(mixed $input, bool $byReference, array $allowedSites, string $instance): array
+    public function resolve(mixed $input, bool $byReference, array $allowedSites, string $instance, array $publicAliases = []): array
     {
         // A fresh anonymous live context prevents backend cookies and preview state granting access.
         $context = new Context();
@@ -53,7 +53,7 @@ final class PageResolver
                     return ['status' => 'unsupported'];
                 }
                 PeerConfiguration::origin($input);
-                $uri = new Uri($input);
+                $uri = new Uri(PeerConfiguration::canonicalUrl($input, $publicAliases));
                 $query = $uri->getQuery();
                 $fragment = $uri->getFragment();
                 // Plugin, preview, authentication and page-selection parameters aren't page-only URLs.

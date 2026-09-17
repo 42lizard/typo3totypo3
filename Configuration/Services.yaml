@@ -27,3 +27,10 @@ services:
       - name: console.command
         command: 'exchange:retry'
         description: 'Resolve unchanged pending link fields and RTE anchors'
+  Lizard\Typo3ToTypo3\Link\RefreshWorker:
+    public: true
+  Lizard\Typo3ToTypo3\Command\RefreshCommand:
+    tags:
+      - name: console.command
+        command: 'exchange:refresh'
+        description: 'Refresh managed destinations by stable identity'

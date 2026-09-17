@@ -75,7 +75,7 @@ page identity table when moving the same logical instance to a new domain.
 Readable HTTP URLs can resolve against equivalent HTTPS site bases; API traffic
 always uses verified HTTPS. Configure absolute site/language bases in TYPO3.
 Current URL validation supports ASCII/punycode hostnames and IPv4 addresses.
-Legacy domain aliases, IPv6 literals, shortcut/mount pages, and specialized route
+IPv6 literals, shortcut/mount pages, and specialized route
 integrations are not covered by this milestone.
 
 When an API/public domain changes, update endpoint/origin configuration and the
@@ -175,5 +175,6 @@ Coverage includes stable identities after rename/move/restore, distinct identiti
 for new pages, publication/access/language restrictions, authentication, scoped
 grants, rate limits, request limits, no-cache responses, and client validation.
 Link-field conversion and persistent destination rendering have separate
-[integration checks](link-fields.md#verification). [Background retries](delayed-resolution.md) are implemented. Destination refresh
-and deployment load targets remain subsequent milestones.
+[integration checks](link-fields.md#verification). [Background retries](delayed-resolution.md)
+and [destination refresh with explicit old-domain aliases](destination-refresh.md)
+are implemented. Deployment load targets remain a subsequent validation milestone.

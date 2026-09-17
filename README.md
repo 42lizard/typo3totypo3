@@ -10,8 +10,9 @@ The repository provides two working development installations and an authenticat
 public-page resolver with stable identities. [Link fields](docs/link-fields.md)
 and RTE anchors convert on save and render from persistent local destination
 data. [Background retries](docs/delayed-resolution.md) complete failed initial
-lookups without overwriting newer edits. Scheduled destination refresh and the
-backend report are the next milestones.
+lookups without overwriting newer edits. [Scheduled destination refresh](docs/destination-refresh.md)
+updates URLs and availability and invalidates dependent page caches. The backend
+report is the next milestone.
 
 ## Local development
 

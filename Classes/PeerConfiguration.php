@@ -53,6 +53,30 @@ final class PeerConfiguration
         return $parts['scheme'] . '://' . strtolower($parts['host']) . ':' . $port;
     }
 
+    /** Explicit, one-hop origin replacement; this never contacts the old host. */
+    public static function canonicalUrl(string $url, array $aliases): string
+    {
+        $origin = self::origin($url);
+        foreach ($aliases as $old => $new) {
+            if (!is_string($old) || !is_string($new)) {
+                throw new \InvalidArgumentException('Public aliases must map origins to origins.');
+            }
+            foreach ([$old, $new] as $value) {
+                self::origin($value);
+                if (!in_array(parse_url($value, PHP_URL_PATH), [null, '', '/'], true)
+                    || parse_url($value, PHP_URL_QUERY) !== null || parse_url($value, PHP_URL_FRAGMENT) !== null) {
+                    throw new \InvalidArgumentException('Public aliases must contain origins only.');
+                }
+            }
+            if ($origin === self::origin($old)) {
+                $target = new \TYPO3\CMS\Core\Http\Uri($new);
+                return (string)(new \TYPO3\CMS\Core\Http\Uri($url))
+                    ->withScheme($target->getScheme())->withHost($target->getHost())->withPort($target->getPort());
+            }
+        }
+        return $url;
+    }
+
     public static function allowsUrl(string $url, array $origins): bool
     {
         $origin = self::origin($url);

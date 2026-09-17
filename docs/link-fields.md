@@ -66,9 +66,8 @@ TYPO3's `pages` cache group. Unrelated cached pages remain intact. Disabling pee
 configuration prevents new rendering of its links; clear frontend caches when
 changing peer configuration, just as when changing site configuration.
 
-**Scheduled refresh is not implemented yet.** Remote page moves or visibility
-changes do not update local destination states automatically until that milestone
-is added. A managed reference with missing local destination data renders plain
+[Scheduled refresh](destination-refresh.md) updates remote page URLs and
+availability and invalidates dependent output; configure its every-minute task. A managed reference with missing local destination data renders plain
 text. Database clones need an enabled environment-specific peer configuration
 and an approved destination origin to render links.
 
@@ -80,6 +79,7 @@ From each paired development instance directory:
 ddev exec php /opt/typo3-to-typo3/dev/test-link-fields.php
 ddev exec php /opt/typo3-to-typo3/dev/test-rte.php
 ddev exec php /opt/typo3-to-typo3/dev/test-retry.php
+ddev exec php /opt/typo3-to-typo3/dev/test-refresh.php
 ddev exec php /opt/typo3-to-typo3/dev/test-resolver.php
 ```
 

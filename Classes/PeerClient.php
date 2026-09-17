@@ -13,6 +13,16 @@ final class PeerClient
 
     public function resolve(string $peerId, array $urls, float $timeout = 3.0): array
     {
+        return $this->request($peerId, $urls, false, $timeout);
+    }
+
+    public function refresh(string $peerId, array $references, float $timeout = 3.0): array
+    {
+        return $this->request($peerId, $references, true, $timeout);
+    }
+
+    private function request(string $peerId, array $urls, bool $byReference, float $timeout): array
+    {
         if (!is_finite($timeout) || $timeout <= 0 || $timeout > 3.0) {
             throw new \InvalidArgumentException('Timeout must be greater than zero and at most three seconds.');
         }
@@ -37,11 +47,18 @@ final class PeerClient
             throw new \InvalidArgumentException('Resolve between 1 and 50 URLs per request.');
         }
         foreach ($urls as $url) {
-            if (!is_string($url) || !PeerConfiguration::allowsUrl($url, $peer['origins'])) {
+            if ($byReference) {
+                if (!is_array($url) || ($url['instance'] ?? null) !== $peer['instance']
+                    || !PeerConfiguration::isUuid($url['page'] ?? null)
+                    || !is_int($url['language'] ?? null) || $url['language'] < 0 || $url['language'] > 2147483647
+                    || count($url) !== 3) {
+                    throw new \InvalidArgumentException('Invalid refresh reference.');
+                }
+            } elseif (!is_string($url) || !PeerConfiguration::allowsUrl($url, $peer['origins'])) {
                 throw new \InvalidArgumentException('URL does not belong to this configured peer.');
             }
         }
-        $body = json_encode(['urls' => $urls], JSON_THROW_ON_ERROR);
+        $body = json_encode([$byReference ? 'references' : 'urls' => $urls], JSON_THROW_ON_ERROR);
         if (strlen($body) > Resolve::MAX_BODY) {
             throw new \InvalidArgumentException('The request exceeds the resolver body limit.');
         }
@@ -90,7 +107,7 @@ final class PeerClient
         ) {
             throw new \RuntimeException('Peer returned an invalid response or unexpected instance identity.');
         }
-        foreach ($payload['results'] as $result) {
+        foreach ($payload['results'] as $index => $result) {
             if (!is_array($result) || !in_array($result['status'] ?? null, ['resolved', 'unavailable', 'unsupported'], true)) {
                 throw new \RuntimeException('Peer returned an invalid result.');
             }
@@ -104,6 +121,12 @@ final class PeerClient
                     || !PeerConfiguration::allowsUrl($result['url'], $peer['origins']))
             ) {
                 throw new \RuntimeException('Peer returned an invalid reference or unapproved URL.');
+            }
+            if ($byReference && $result['status'] === 'resolved'
+                && ($result['reference'] != $urls[$index]
+                    || parse_url($result['url'], PHP_URL_QUERY) !== null
+                    || parse_url($result['url'], PHP_URL_FRAGMENT) !== null)) {
+                throw new \RuntimeException('Peer changed the requested identity or returned a non-canonical URL.');
             }
         }
         return $payload['results'];
