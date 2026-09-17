@@ -8,8 +8,8 @@ and its six dependent implementation tickets.
 
 The repository provides two working development installations and an authenticated
 public-page resolver with stable identities. [Link fields](docs/link-fields.md)
-convert on save and render from persistent local destination data. RTE conversion
-and background synchronization are the next milestones.
+and RTE anchors convert on save and render from persistent local destination
+data. Background retries and synchronization are the next milestones.
 
 ## Local development
 

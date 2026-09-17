@@ -21,7 +21,7 @@ final class LinkFieldHook
     private ?float $deadline = null;
     private array $results = [];
     private array $outcomes = [];
-    private bool $warned = false;
+    private array $warned = [];
 
     public function __construct(
         private readonly PeerConfiguration $configuration,
@@ -31,6 +31,7 @@ final class LinkFieldHook
         private readonly TcaSchemaFactory $schemas,
         private readonly TypoLinkCodecService $codec,
         private readonly FlashMessageService $messages,
+        private readonly \TYPO3\CMS\Core\Configuration\Richtext $richtext,
     ) {}
 
     public function processDatamap_beforeStart(DataHandler $handler): void
@@ -38,7 +39,7 @@ final class LinkFieldHook
         if ($handler->isOuterMostInstance()) {
             $this->deadline = null;
             $this->results = $this->outcomes = [];
-            $this->warned = false;
+            $this->warned = [];
         }
     }
 
@@ -55,44 +56,61 @@ final class LinkFieldHook
         $type = BackendUtility::getTCAtypeValue($table, $record);
         $candidates = [];
         $pending = [];
+        $rteAnchors = [];
+        $limits = [];
         foreach ($fields as $field => $value) {
-            if (!$schema->hasField($field)) {
+            if (!$schema->hasField($field) || !is_string($value)) {
                 continue;
             }
             $fieldSchema = $schema->hasSubSchema($type) && $schema->getSubSchema($type)->hasField($field)
                 ? $schema->getSubSchema($type)->getField($field) : $schema->getField($field);
             $config = $fieldSchema->getConfiguration();
-            if (($config['type'] ?? '') !== 'link' || !is_string($value)) {
+            $isRte = ($config['type'] ?? '') === 'text' && ($config['enableRichtext'] ?? false);
+            if (($config['type'] ?? '') !== 'link' && !$isRte) {
                 continue;
             }
             $pending[$field] = ['value' => $value, 'status' => 'ordinary', 'reference_key' => ''];
-            $parts = $this->codec->decode($value);
-            $url = $parts['url'];
-            // Existing stable links must survive peer outages without any network access.
-            if (str_starts_with($url, 't3://exchange?')) {
-                $pending[$field]['status'] = 'managed';
-                parse_str((string)parse_url($url, PHP_URL_QUERY), $parameters);
-                $reference = (new ManagedLink())->resolveHandlerData($parameters);
-                if ($reference['valid']) {
-                    $pending[$field]['reference_key'] = ManagedLink::key($reference);
-                }
-                continue;
-            }
+            $limits[$field] = (int)($config['max'] ?? 0);
             $allowed = $config['allowedTypes'] ?? ['*'];
-            if (!in_array('*', $allowed, true) && !in_array('exchange', $allowed, true)) {
-                continue;
+            if ($isRte) {
+                $rteConfig = $this->richtext->getConfiguration($table, $field, (int)($record['pid'] ?? 0), $type, $config);
+                $allowed = isset($rteConfig['allowedTypes'])
+                    ? array_map('trim', explode(',', $rteConfig['allowedTypes'])) : ['*'];
+                if (!isset($rteConfig['allowedTypes']) && array_intersect(['url', 'exchange'], array_map('trim', explode(',', $rteConfig['blindLinkOptions'] ?? '')))) {
+                    $allowed = [];
+                }
+                $rteAnchors[$field] = RteLinks::anchors($value);
+                $links = $rteAnchors[$field];
+            } else {
+                $links = [$this->codec->decode($value)];
             }
-            foreach ($peers as $peerId => $peer) {
-                try {
-                    if (($peer['enabled'] ?? false) !== true || !PeerConfiguration::allowsUrl($url, $peer['origins'] ?? [])) {
-                        continue;
+            foreach ($links as $index => $parts) {
+                $url = $parts['url'];
+                // Existing stable links survive outages without any network access.
+                if (str_starts_with($url, 't3://exchange?')) {
+                    $pending[$field]['status'] = 'managed';
+                    parse_str((string)parse_url($url, PHP_URL_QUERY), $parameters);
+                    $reference = (new ManagedLink())->resolveHandlerData($parameters);
+                    if ($reference['valid'] && !$isRte) {
+                        $pending[$field]['reference_key'] = ManagedLink::key($reference);
                     }
-                } catch (\InvalidArgumentException) {
                     continue;
                 }
-                $candidates[$field] = ['peer' => (string)$peerId, 'url' => $url, 'parts' => $parts,
-                    'max' => (int)($config['max'] ?? 0)];
-                break;
+                if (!in_array('*', $allowed, true) && (!in_array('exchange', $allowed, true) || !in_array('url', $allowed, true))) {
+                    continue;
+                }
+                foreach ($peers as $peerId => $peer) {
+                    try {
+                        if (($peer['enabled'] ?? false) !== true || !PeerConfiguration::allowsUrl($url, $peer['origins'] ?? [])) {
+                            continue;
+                        }
+                    } catch (\InvalidArgumentException) {
+                        continue;
+                    }
+                    $candidates[] = ['field' => $field, 'index' => $index, 'rte' => $isRte,
+                        'peer' => (string)$peerId, 'url' => $url, 'parts' => $parts];
+                    break;
+                }
             }
         }
         $groups = [];
@@ -117,36 +135,66 @@ final class LinkFieldHook
                 $this->resolveBatch((string)$peer, $batch);
             }
         }
-        foreach ($candidates as $field => $candidate) {
+        $replacements = [];
+        $verified = [];
+        foreach ($candidates as $candidate) {
+            $field = $candidate['field'];
             $result = $this->results[$candidate['peer']][$candidate['url']];
-            $pending[$field]['status'] = $result['status'];
-            if ($result['status'] === 'resolved') {
-                $reference = $result['reference'];
-                $suffix = parse_url($result['url']);
-                $parameters = $reference + array_intersect_key($suffix, array_flip(['query', 'fragment']));
-                $parts = $candidate['parts'];
-                $parts['url'] = (new ManagedLink())->asString($parameters);
-                $converted = $this->codec->encode($parts);
-                if ($candidate['max'] > 0 && mb_strlen($converted) > $candidate['max']) {
-                    $pending[$field]['status'] = 'too_long';
-                } else {
-                    $base = preg_split('/[?#]/', $result['url'], 2)[0];
-                    $this->destinations->record($reference, 'resolved', $base);
-                    $fields[$field] = $converted;
-                    $pending[$field]['value'] = $converted;
-                    $pending[$field]['reference_key'] = ManagedLink::key($reference);
-                    continue;
+            if ($result['status'] !== 'resolved') {
+                // Keep a failure outcome even when other anchors in this field resolved.
+                $priority = ['pending' => 5, 'denied' => 4, 'unavailable' => 3, 'unsupported' => 2];
+                if (($priority[$result['status']] ?? 0) > ($priority[$pending[$field]['status']] ?? 0)) {
+                    $pending[$field]['status'] = $result['status'];
                 }
+                $this->warn($table, $field);
+                continue;
             }
-            if (!$this->warned) {
-                $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
-                    'Some peer links could not be verified. Their original values were kept; they can be retried later.',
-                    'Cross-instance links', ContextualFeedbackSeverity::WARNING, PHP_SAPI !== 'cli',
-                ));
-                $this->warned = true;
+            $reference = $result['reference'];
+            $suffix = parse_url($result['url']);
+            $parameters = $reference + array_intersect_key($suffix, array_flip(['query', 'fragment']));
+            $managed = (new ManagedLink())->asString($parameters);
+            if ($candidate['rte']) {
+                $replacements[$field][$candidate['index']] = $managed;
+            } else {
+                $parts = $candidate['parts'];
+                $parts['url'] = $managed;
+                $fields[$field] = $this->codec->encode($parts);
+                $pending[$field]['reference_key'] = ManagedLink::key($reference);
+            }
+            $verified[$field][] = $result;
+            if (in_array($pending[$field]['status'], ['ordinary', 'managed'], true)) {
+                $pending[$field]['status'] = 'resolved';
             }
         }
+        foreach ($verified as $field => $results) {
+            if (isset($replacements[$field])) {
+                $fields[$field] = RteLinks::replace($fields[$field], $rteAnchors[$field], $replacements[$field]);
+            }
+            if ($limits[$field] > 0 && mb_strlen($fields[$field]) > $limits[$field]) {
+                $fields[$field] = $pending[$field]['value'];
+                $pending[$field]['status'] = 'too_long';
+                $pending[$field]['reference_key'] = '';
+                $this->warn($table, $field);
+                continue;
+            }
+            foreach ($results as $result) {
+                $this->destinations->record($result['reference'], 'resolved', preg_split('/[?#]/', $result['url'], 2)[0]);
+            }
+            $pending[$field]['value'] = $fields[$field];
+        }
         $this->outcomes[spl_object_id($handler)][$table][$id] = $pending;
+    }
+
+    private function warn(string $table, string $field): void
+    {
+        $key = $table . '.' . $field;
+        if (!isset($this->warned[$key])) {
+            $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
+                'Some peer links in ' . $key . ' could not be verified. Their original values were kept; they can be retried later.',
+                'Cross-instance links', ContextualFeedbackSeverity::WARNING, PHP_SAPI !== 'cli',
+            ));
+            $this->warned[$key] = true;
+        }
     }
 
     private function resolveBatch(string $peer, array $urls): void

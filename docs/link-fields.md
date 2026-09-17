@@ -1,7 +1,8 @@
-# Managed link fields
+# Managed link fields and RTE anchors
 
 After [pairing the instances](peer-resolution.md), paste a readable peer page
-URL into a TCA `type=link` field, for example a content element's **Header link**.
+URL into a TCA `type=link` field, for example a content element's **Header link**,
+or use it as a link destination in the rich-text editor.
 Saving verifies the destination over the authenticated HTTPS API and stores a
 `t3://exchange` reference containing the remote instance UUID, page UUID and
 selected language. TYPO3's standard typolink rendering uses the persistent local
@@ -13,9 +14,10 @@ instance directories after installing this change.
 ## Save behavior
 
 Conversion runs inside DataHandler after its permission and field checks. Only
-changed, authorized link fields participate. Existing managed references stay
-intact. URLs outside enabled peers' configured origins stay ordinary links.
-There is no bulk conversion of old content.
+changed, authorized link and effective rich-text fields participate. Existing
+managed references stay intact. URLs outside enabled peers' configured origins stay ordinary links.
+There is no bulk conversion of old content. RTE and ordinary link fields use
+the same batches, deduplication and time budget.
 
 Requests batch the eligible fields of each record, respecting the API's count
 and body limits. Duplicate URLs are reused across records in the save. All
@@ -34,10 +36,15 @@ written. If a field restricts `allowedTypes`, include `exchange` alongside `url`
 record-type `columnsOverrides` are respected. The default unrestricted fields
 need no TCA changes.
 
-This milestone covers normal TCA link fields, including saves through DataHandler.
-RTE HTML, FlexForms, direct SQL changes and custom rendering are outside this
-milestone. Conversion uses the record selected by DataHandler and does not
-publish workspaces or drafts.
+This milestone covers TCA link fields and `type=text` fields with effective
+`enableRichtext`, including record-type overrides. RTE configuration `allowedTypes`
+and `blindLinkOptions` are respected; restricted configurations must permit both
+`url` and `exchange`. Only verified anchor href attributes change. HTML5 token
+positions preserve surrounding content, attributes and inline markup; malformed
+HTML is left untouched by conversion. TYPO3's own RTE transformations still apply.
+FlexForms, direct SQL changes and custom rendering are outside this milestone.
+Conversion uses the record selected by DataHandler and does not publish workspaces
+or drafts.
 
 ## Destination states and caches
 
@@ -70,6 +77,7 @@ From each paired development instance directory:
 
 ```bash
 ddev exec php /opt/typo3-to-typo3/dev/test-link-fields.php
+ddev exec php /opt/typo3-to-typo3/dev/test-rte.php
 ddev exec php /opt/typo3-to-typo3/dev/test-resolver.php
 ```
 
@@ -79,3 +87,6 @@ removes it afterward and clears local caches. Controlled transport responses
 exercise batching, failures and the shared time budget; a real HTTPS lookup
 verifies cross-version conversion. Do not run these checks alongside manual
 editing in the same development instances.
+
+The RTE checks also cover copied and localized content, draft-only workspace
+saves, mixed anchors, escaped HTML, and preservation of unrelated markup.
