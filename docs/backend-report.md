@@ -44,10 +44,10 @@ included, even if no managed destination exists yet. The indicator disappears
 when the persisted problems are resolved. Repeated refresh failure means at
 least three failed attempts.
 
-After correcting the protected peer configuration or remote grants, administrators
+After correcting connections in **System → Instance connections** or remote grants, administrators
 can select **Recheck after repair** to resume paused destination checks. Destinations
-stay denied until verified individually. The report does not edit credentials or
-connection configuration. Initial failed conversions are retried through their
+stay denied until verified individually. The report links workflow problems to records; connection settings are managed
+in the separate administrator module. Initial failed conversions are retried through their
 record's queue action after the connection is repaired.
 
 Save-time lookup warnings are consolidated into one message. Opening a record

@@ -38,6 +38,10 @@ produces a readable destination URL from that reference.
 
 ## Trust and administration
 
+Backend-managed connections amend the original file-managed design; see
+[ADR 0003](adr/0003-manage-connections-in-the-backend.md) and the
+[pairing guide](connections.md).
+
 - Connections are explicitly configured trusted peers; trust is not transitive.
 - Only administrators configure connections and grant access to selected
   websites' public pages.
@@ -46,7 +50,8 @@ produces a readable destination URL from that reference.
 - Use high-entropy scoped bearer API tokens. The API permits page resolution
   only and grants no content-writing access.
 - Communication uses verified HTTPS, including trusted HTTPS in DDEV.
-- Credentials stay in server configuration and never appear in rendered links.
+- Connection settings are stored encrypted in the database, using TYPO3's server-side
+  encryption key and application context. Credentials never appear in rendered links.
 - Pasted URLs can trigger communication only with configured peers.
 - Database copies must not inherit active production connections. Staging and
   development require explicit environment mappings and credentials before
@@ -60,9 +65,11 @@ produces a readable destination URL from that reference.
 
 ### Security implementation requirements
 
-- Send credentials in the Authorization header, never URLs. Keep credentials out
-  of logs, browser output, repository files, and content database exports. Full
-  server/configuration clones still require environment-specific secret replacement.
+- Send credentials in the Authorization header, never URLs. Keep plaintext
+  credentials out of logs, repository files and database exports. The administrator
+  sees a newly generated outgoing token once for manual pairing; saved tokens are
+  never displayed. Full server/configuration clones still require explicit
+  environment isolation before startup.
 - Match configured URL origins strictly, including scheme, hostname and port.
   Send the candidate URL as data to the peer's fixed endpoint; neither resolver
   fetches arbitrary submitted URLs. Disable redirects for authenticated requests.
@@ -202,7 +209,7 @@ These are validation requirements for implementation, not completed test results
 General content/file synchronization, restricted destination pages, record detail
 links, FlexForms, direct database imports, custom rendering integrations, bulk
 migration, cross-instance page moves, stable section-anchor identities, and an
-interactive pairing flow are deferred. Exact URI parameter names and database
+automatic pairing handshake are deferred. Exact URI parameter names and database
 schema are implementation details subject to the above behavior.
 
 ## Verified TYPO3 integration facts

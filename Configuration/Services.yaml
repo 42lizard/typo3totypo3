@@ -43,3 +43,7 @@ services:
   Lizard\Typo3ToTypo3\Backend\ConnectionToolbar:
     tags:
       - name: backend.toolbar.item
+  Lizard\Typo3ToTypo3\Configuration\ConnectionStore:
+    public: true
+  Lizard\Typo3ToTypo3\Backend\ConnectionsController:
+    public: true

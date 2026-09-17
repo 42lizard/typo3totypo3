@@ -12,9 +12,10 @@
             "dist": {
                 "type": "path",
                 "url": "/opt/typo3-to-typo3",
-                "reference": "b925758e80a08bc6189b836a8e3c15e96c7dd006"
+                "reference": "a1a83749d13c6fc4962a2545dd7b22dc26ad3e77"
             },
             "require": {
+                "ext-sodium": "*",
                 "masterminds/html5": "^2.9",
                 "php": "^8.2",
                 "typo3/cms-core": "^13.4 || ^14.3",

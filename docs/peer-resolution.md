@@ -29,7 +29,11 @@ Git-ignored files with owner-only permissions. It refuses to overwrite existing
 configuration. Restart both DDEV projects after changing their environment
 configuration; changes to the JSON peer configuration take effect on the next request.
 
-## Server configuration
+## Legacy file configuration
+
+New installations use [backend connection management](connections.md). Existing
+files can be imported once from **System → Instance connections**. The format
+below documents legacy compatibility and migration.
 
 Set `TYPO3_EXCHANGE_CONFIG` to an absolute path to a protected JSON file outside
 the document root. Without an enabled file, resolution is disabled. The DDEV

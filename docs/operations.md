@@ -2,17 +2,16 @@
 
 ## Pair the instances
 
-Use the JSON schema and identity rules in [peer configuration](peer-resolution.md#server-configuration).
-Create one outgoing connection for each remote instance UUID and a corresponding
-incoming grant on that instance. Use independent random tokens for each direction;
-store the incoming token's SHA-256 hash on the receiver. Limit each grant to the
-site identifiers it needs. API endpoints must use HTTPS with valid certificates.
+Use **System → Instance connections** to configure peers; follow the
+[backend pairing guide](connections.md). Each direction has an independent token:
+the caller generates it, and the receiver stores its hash in a site-scoped grant.
+Existing JSON installations should use the module's one-time import first.
 
-Keep `TYPO3_EXCHANGE_CONFIG` outside the document root and source control, readable
-only by the application account. Provide the same environment to PHP-FPM and CLI
-jobs. Give Testing, Development and production separate credentials and endpoint
-mappings. In TYPO3 site YAML, select environment-specific bases through
-`baseVariants`; do not infer peer trust from pasted URLs or redirects.
+TYPO3's existing encryption key and application context bind the database
+configuration to its environment. Provide the same TYPO3 settings and context to
+PHP-FPM and CLI jobs. Keep the key outside database exports and version control.
+The [clone and key-rotation rules](connections.md#encryption-and-environment-isolation)
+apply before enabling copied installations.
 
 After deployment, run from the TYPO3 project directory:
 
@@ -30,7 +29,7 @@ arguments, screenshots, tickets or logs.
 ## Schedule both jobs
 
 Run these as the application's operating-system account with its normal PHP and
-`TYPO3_EXCHANGE_CONFIG` environment. Replace the project path:
+TYPO3 configuration and application context. Replace the project path:
 
 ```cron
 * * * * * cd /path/to/typo3 && vendor/bin/typo3 exchange:retry --limit=10

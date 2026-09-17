@@ -69,3 +69,5 @@ For secure peer setup, the resolver command, and integration checks, see
 [peer resolution](docs/peer-resolution.md).
 
 Deployment and recovery: [operations guide](docs/operations.md).
+
+Manage peers under **System → Instance connections**; see [pairing and migration](docs/connections.md).

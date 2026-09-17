@@ -47,3 +47,10 @@ CREATE TABLE tx_typo3totypo3_link_outcome (
     KEY due_jobs (job_status, next_attempt, lease_until),
     PRIMARY KEY (source_key)
 );
+
+CREATE TABLE tx_typo3totypo3_connections (
+    environment_id varchar(64) NOT NULL,
+    payload mediumtext NOT NULL,
+    revision varchar(32) NOT NULL,
+    PRIMARY KEY (environment_id)
+);

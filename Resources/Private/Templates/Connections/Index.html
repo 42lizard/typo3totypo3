@@ -1,0 +1,243 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Module" />
+<f:section name="Content">
+<h1>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.title" />
+</h1>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.intro" />
+</p>
+<f:if condition="{setupRequired}">
+<f:then>
+<p class="alert alert-warning">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.setup" />
+</p>
+</f:then>
+<f:else>
+<f:if condition="{message}">
+<p class="alert alert-info">{message}</p>
+</f:if>
+<f:if condition="{newToken}">
+<div class="alert alert-warning">
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.copyToken" />
+</p>
+<code>{newToken}</code>
+</div>
+</f:if>
+<h2>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.local" />
+</h2>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="settings" />
+<f:if condition="{initialized}">
+<f:then>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.identity" />: <code>{instance}</code>
+</p>
+</f:then>
+<f:else>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.identity" />
+<input class="form-control" type="text" name="instance" value="{instance}" autocomplete="off" />
+</label>
+</f:else>
+</f:if>
+<label class="d-block">
+<f:if condition="{enabled}">
+<f:then>
+<input type="checkbox" name="enabled" value="1" checked="checked" />
+</f:then>
+<f:else>
+<input type="checkbox" name="enabled" value="1" />
+</f:else>
+</f:if> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.enabled" />
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.aliases" />
+<textarea class="form-control" name="aliases" rows="3">{aliases}</textarea>
+</label>
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.save" />
+</button>
+</form>
+<f:if condition="{initialized}">
+<f:then>
+<h2>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.outgoing" />
+</h2>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.outgoingHelp" />
+</p>
+<f:for each="{outgoing}" as="peer">
+<div class="card mb-3">
+<div class="card-body">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="outgoing" />
+<f:if condition="{peer.existing}">
+<f:then>
+<h3>{peer.name}</h3>
+<input type="hidden" name="name" value="{peer.name}" />
+</f:then>
+<f:else>
+<h3>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.addOutgoing" />
+</h3>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.name" />
+<input class="form-control" type="text" name="name" value="" autocomplete="off" />
+</label>
+</f:else>
+</f:if>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remoteIdentity" />
+<input class="form-control" type="text" name="instance" value="{peer.instance}" autocomplete="off" />
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.endpoint" />
+<input class="form-control" type="text" name="endpoint" value="{peer.endpoint}" autocomplete="off" />
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.origins" />
+<textarea class="form-control" name="origins" rows="3">{peer.origins}</textarea>
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.outgoingToken" />
+<input class="form-control" type="password" name="token" value="" autocomplete="new-password" />
+</label>
+<label class="d-block">
+<f:if condition="{peer.enabled}">
+<f:then>
+<input type="checkbox" name="enabled" value="1" checked="checked" />
+</f:then>
+<f:else>
+<input type="checkbox" name="enabled" value="1" />
+</f:else>
+</f:if> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.enabled" />
+</label>
+<label class="d-block">
+<input type="checkbox" name="rotate" value="1" /> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.rotate" />
+</label>
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.save" />
+</button>
+</form>
+<f:if condition="{peer.existing}">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="test" />
+<input type="hidden" name="name" value="{peer.name}" />
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.test" />
+</button>
+</form>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="removeOutgoing" />
+<input type="hidden" name="name" value="{peer.name}" />
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remove" />
+</button>
+</form>
+</f:if>
+</div>
+</div>
+</f:for>
+<h2>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.incoming" />
+</h2>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.incomingHelp" />
+</p>
+<f:for each="{incoming}" as="grant">
+<div class="card mb-3">
+<div class="card-body">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="incoming" />
+<f:if condition="{grant.existing}">
+<f:then>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remoteIdentity" />: <code>{grant.instance}</code>
+</p>
+<input type="hidden" name="instance" value="{grant.instance}" />
+</f:then>
+<f:else>
+<h3>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.addIncoming" />
+</h3>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remoteIdentity" />
+<input class="form-control" type="text" name="instance" value="" autocomplete="off" />
+</label>
+</f:else>
+</f:if>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.sites" />
+<textarea class="form-control" name="sites" rows="3">{grant.sites}</textarea>
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.rate" />
+<input class="form-control" type="number" name="rate" value="{grant.rate}" autocomplete="off" />
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.incomingToken" />
+<input class="form-control" type="password" name="token" value="" autocomplete="new-password" />
+</label>
+<label class="d-block">
+<f:if condition="{grant.enabled}">
+<f:then>
+<input type="checkbox" name="enabled" value="1" checked="checked" />
+</f:then>
+<f:else>
+<input type="checkbox" name="enabled" value="1" />
+</f:else>
+</f:if> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.enabled" />
+</label>
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.save" />
+</button>
+</form>
+<f:if condition="{grant.existing}">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="removeIncoming" />
+<input type="hidden" name="instance" value="{grant.instance}" />
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remove" />
+</button>
+</form>
+</f:if>
+</div>
+</div>
+</f:for>
+</f:then>
+<f:else>
+<h2>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.import" />
+</h2>
+<p>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.importHelp" />
+</p>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="import" />
+<button class="btn btn-default" type="submit">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.import" />
+</button>
+</form>
+</f:else>
+</f:if>
+</f:else>
+</f:if>
+</f:section>
+</html>

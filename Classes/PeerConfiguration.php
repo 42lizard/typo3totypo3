@@ -8,12 +8,27 @@ final class PeerConfiguration
 {
     public function load(): array
     {
+        $store = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Lizard\Typo3ToTypo3\Configuration\ConnectionStore::class);
+        $state = $store->read();
+        if ($state['revision'] !== '' || $store->hasConfiguration()) {
+            $config = $state['config'];
+            if (($config['enabled'] ?? false) !== true || !self::isUuid($config['instance'] ?? null)) {
+                throw new \RuntimeException('Connections are not enabled in this environment.');
+            }
+            return $config;
+        }
+        return self::legacy();
+    }
+
+    /** Compatibility until an administrator explicitly imports the protected legacy file. */
+    public static function legacy(bool $requireEnabled = true): array
+    {
         $path = getenv('TYPO3_EXCHANGE_CONFIG');
         if (!$path || !is_readable($path)) {
             throw new \RuntimeException('Peer configuration is not enabled.');
         }
         $config = json_decode(file_get_contents($path), true, 32, JSON_THROW_ON_ERROR);
-        if (!is_array($config) || ($config['enabled'] ?? false) !== true
+        if (!is_array($config) || !is_bool($config['enabled'] ?? null) || ($requireEnabled && $config['enabled'] !== true)
             || !self::isUuid($config['instance'] ?? null)
         ) {
             throw new \RuntimeException('Peer configuration is invalid or disabled.');
