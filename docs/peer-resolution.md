@@ -1,7 +1,8 @@
 # Peer resolution
 
 The extension resolves public TYPO3 page URLs into stable references through a
-read-only authenticated API. No editor fields are modified in this milestone.
+read-only authenticated API. The [link-field workflow](link-fields.md) uses this
+API to convert editor links on save.
 
 ## Try the paired development instances
 
@@ -130,7 +131,8 @@ authoritative page deletion. The client validates protocol, instance identity,
 result count, UUIDs, language IDs and returned URL origins. It disables redirects,
 cookies and automatic decompression, verifies TLS, caps response transfer size,
 and uses a one-second connect timeout within a three-second request timeout.
-The eventual save workflow still needs to enforce a total budget across batches.
+The link-field save workflow shares a three-second deadline across all its
+records, peers and batches.
 
 Rate limiting uses TYPO3's persistent rate-limit storage with a per-peer lock.
 For a multi-web-node deployment, the lock/storage arrangement must be shared or
@@ -172,5 +174,6 @@ communication, plus controlled invalid responses through the real HTTP client.
 Coverage includes stable identities after rename/move/restore, distinct identities
 for new pages, publication/access/language restrictions, authentication, scoped
 grants, rate limits, request limits, no-cache responses, and client validation.
-The UI conversion, persistent resolved-link cache, refresh jobs and deployment
-load targets remain subsequent milestones.
+Link-field conversion and persistent destination rendering have separate
+[integration checks](link-fields.md#verification). RTE conversion, refresh jobs
+and deployment load targets remain subsequent milestones.

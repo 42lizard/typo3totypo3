@@ -11,8 +11,11 @@ final class PeerClient
 {
     public function __construct(private readonly PeerConfiguration $configuration, private readonly RequestFactory $http) {}
 
-    public function resolve(string $peerId, array $urls): array
+    public function resolve(string $peerId, array $urls, float $timeout = 3.0): array
     {
+        if (!is_finite($timeout) || $timeout <= 0 || $timeout > 3.0) {
+            throw new \InvalidArgumentException('Timeout must be greater than zero and at most three seconds.');
+        }
         $config = $this->configuration->load();
         $peer = $config['outgoing'][$peerId] ?? null;
         if (!is_array($peer) || ($peer['enabled'] ?? false) !== true
@@ -52,7 +55,7 @@ final class PeerClient
                     'Accept-Encoding' => 'identity',
                 ],
                 'body' => $body, 'allow_redirects' => false, 'verify' => true,
-                'http_errors' => false, 'connect_timeout' => 1.0, 'timeout' => 3.0,
+                'http_errors' => false, 'connect_timeout' => min(1.0, $timeout), 'timeout' => $timeout,
                 'cookies' => false, 'decode_content' => false,
                 // Bound downloads during transfer, within the same total request timeout.
                 'progress' => static function ($total, $downloaded): void {
@@ -67,7 +70,7 @@ final class PeerClient
                     401, 403 => 'Peer access denied; check credentials and site grants.',
                     429 => 'Peer rate limit reached; retry later.',
                     default => 'Peer resolver unavailable or returned an unexpected HTTP status.',
-                });
+                }, $status);
             }
             $body = $response->getBody()->read(Resolve::MAX_BODY + 1);
             $response->getBody()->close();
@@ -96,6 +99,7 @@ final class PeerClient
                     || ($result['reference']['instance'] ?? null) !== $peer['instance']
                     || !PeerConfiguration::isUuid($result['reference']['page'] ?? null)
                     || !is_int($result['reference']['language'] ?? null) || $result['reference']['language'] < 0
+                    || $result['reference']['language'] > 2147483647
                     || !is_string($result['url'] ?? null)
                     || !PeerConfiguration::allowsUrl($result['url'], $peer['origins']))
             ) {

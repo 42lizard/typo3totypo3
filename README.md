@@ -7,8 +7,9 @@ Remaining implementation is tracked in [GitHub issue #1](https://github.com/42li
 and its six dependent implementation tickets.
 
 The repository provides two working development installations and an authenticated
-public-page resolver with stable identities. Editor conversion, rendering of
-managed links, and background synchronization are not implemented yet.
+public-page resolver with stable identities. [Link fields](docs/link-fields.md)
+convert on save and render from persistent local destination data. RTE conversion
+and background synchronization are the next milestones.
 
 ## Local development
 

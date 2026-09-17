@@ -4,6 +4,7 @@ services:
     autoconfigure: true
   Lizard\Typo3ToTypo3\:
     resource: '../Classes/*'
+    exclude: '../Classes/Link/LinkBuilder*.php'
   Lizard\Typo3ToTypo3\Middleware\Resolve:
     public: true
   Lizard\Typo3ToTypo3\Command\ResolveCommand:
@@ -11,3 +12,9 @@ services:
       - name: console.command
         command: 'exchange:resolve'
         description: 'Resolve a readable page URL through a configured peer'
+  Lizard\Typo3ToTypo3\Link\LinkFieldHook:
+    public: true
+  Lizard\Typo3ToTypo3\Link\LocalRenderer:
+    public: true
+  Lizard\Typo3ToTypo3\Link\DestinationStore:
+    public: true
