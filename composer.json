@@ -1,0 +1,21 @@
+{
+    "name": "42lizard/typo3-to-typo3",
+    "description": "Data exchange and maintainable links between TYPO3 instances",
+    "type": "typo3-cms-extension",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": "^8.2",
+        "typo3/cms-core": "^13.4 || ^14.3",
+        "typo3/cms-frontend": "^13.4 || ^14.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lizard\\Typo3ToTypo3\\": "Classes/"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "typo3_to_typo3"
+        }
+    }
+}

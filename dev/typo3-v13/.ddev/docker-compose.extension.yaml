@@ -1,0 +1,4 @@
+services:
+  web:
+    volumes:
+      - "../../../:/opt/typo3-to-typo3:ro"

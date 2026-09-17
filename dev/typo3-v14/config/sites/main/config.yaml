@@ -1,0 +1,16 @@
+base: 'https://t3exchange-v14.ddev.site/'
+dependencies:
+  - typo3/fluid-styled-content
+  - typo3/fluid-styled-content-css
+errorHandling: {  }
+languages:
+  -
+    title: English
+    enabled: true
+    languageId: 0
+    base: /
+    locale: en_US.UTF-8
+    navigationTitle: English
+    flag: us
+rootPageId: 1
+routes: {  }

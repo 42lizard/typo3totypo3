@@ -1,0 +1,11 @@
+.DS_Store
+/vendor/
+/dev/*/vendor/
+/dev/*/var/
+/dev/*/public/
+/dev/*/config/system/settings.php
+/dev/*/config/system/additional.php
+/dev/*/.env
+/dev/*/.env.*
+/dev/*/.local-credentials
+/dev/*/.peer-config.json

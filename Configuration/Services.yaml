@@ -1,0 +1,13 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+  Lizard\Typo3ToTypo3\:
+    resource: '../Classes/*'
+  Lizard\Typo3ToTypo3\Middleware\Resolve:
+    public: true
+  Lizard\Typo3ToTypo3\Command\ResolveCommand:
+    tags:
+      - name: console.command
+        command: 'exchange:resolve'
+        description: 'Resolve a readable page URL through a configured peer'
