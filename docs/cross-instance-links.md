@@ -3,8 +3,9 @@
 Status: approved by the user on 2026-09-17. All five interview rounds are
 incorporated, including asynchronous resolution after slow or failed lookups.
 Development instances and the [authenticated peer resolver](peer-resolution.md)
-are implemented. Editor conversion, managed-link rendering and background jobs
-remain subsequent milestones.
+are implemented, together with link-field/RTE conversion, local rendering and
+[delayed initial resolution](delayed-resolution.md). Scheduled destination refresh
+and backend reporting remain subsequent milestones.
 
 ## Purpose and first release
 

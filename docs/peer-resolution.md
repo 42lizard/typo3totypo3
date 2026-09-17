@@ -175,5 +175,5 @@ Coverage includes stable identities after rename/move/restore, distinct identiti
 for new pages, publication/access/language restrictions, authentication, scoped
 grants, rate limits, request limits, no-cache responses, and client validation.
 Link-field conversion and persistent destination rendering have separate
-[integration checks](link-fields.md#verification). Background retries, refresh jobs
+[integration checks](link-fields.md#verification). [Background retries](delayed-resolution.md) are implemented. Destination refresh
 and deployment load targets remain subsequent milestones.

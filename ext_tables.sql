@@ -26,5 +26,15 @@ CREATE TABLE tx_typo3totypo3_link_outcome (
     status varchar(16) NOT NULL,
     reference_key varchar(64) NOT NULL DEFAULT '',
     checked_at int unsigned NOT NULL DEFAULT 0,
+    record_hash varchar(64) NOT NULL DEFAULT '',
+    live_uid int unsigned NOT NULL DEFAULT 0,
+    generation varchar(32) NOT NULL DEFAULT '',
+    job_status varchar(16) NOT NULL DEFAULT '',
+    created_at int unsigned NOT NULL DEFAULT 0,
+    next_attempt int unsigned NOT NULL DEFAULT 0,
+    attempts int unsigned NOT NULL DEFAULT 0,
+    lease_token varchar(32) NOT NULL DEFAULT '',
+    lease_until int unsigned NOT NULL DEFAULT 0,
+    KEY due_jobs (job_status, next_attempt, lease_until),
     PRIMARY KEY (source_key)
 );

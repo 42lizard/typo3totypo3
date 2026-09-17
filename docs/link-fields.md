@@ -27,8 +27,9 @@ only the remaining time. A slow host cannot give every field another three secon
 If verification fails, the original value is kept and TYPO3 displays a warning.
 A durable outcome records the source table, record, field, workspace and value
 hash for later retries and reporting. It does not store credentials or a second
-copy of the pasted URL. **Automatic retries are not implemented yet.** Saving an
-otherwise unchanged field does not force another lookup.
+copy of the pasted URL. [Background retries](delayed-resolution.md) handle temporary failures when the
+retry command is scheduled. Saving an otherwise unchanged field does not force
+another lookup.
 
 Query strings, fragments, selected language and typolink target/class/title are
 retained. A reference exceeding the field's configured maximum length is not
@@ -78,6 +79,7 @@ From each paired development instance directory:
 ```bash
 ddev exec php /opt/typo3-to-typo3/dev/test-link-fields.php
 ddev exec php /opt/typo3-to-typo3/dev/test-rte.php
+ddev exec php /opt/typo3-to-typo3/dev/test-retry.php
 ddev exec php /opt/typo3-to-typo3/dev/test-resolver.php
 ```
 

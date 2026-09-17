@@ -8,7 +8,6 @@ use Lizard\Typo3ToTypo3\PeerClient;
 use Lizard\Typo3ToTypo3\PeerConfiguration;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
@@ -22,12 +21,14 @@ final class LinkFieldHook
     private array $results = [];
     private array $outcomes = [];
     private array $warned = [];
+    private bool $background = false;
+    private bool $applying = false;
 
     public function __construct(
+        private readonly PendingStore $jobs,
         private readonly PeerConfiguration $configuration,
         private readonly PeerClient $client,
         private readonly DestinationStore $destinations,
-        private readonly ConnectionPool $connections,
         private readonly TcaSchemaFactory $schemas,
         private readonly TypoLinkCodecService $codec,
         private readonly FlashMessageService $messages,
@@ -45,6 +46,9 @@ final class LinkFieldHook
 
     public function processDatamap_postProcessFieldArray(string $status, string $table, $id, array &$fields, DataHandler $handler): void
     {
+        if ($this->applying) {
+            return;
+        }
         try {
             $peers = $this->configuration->load()['outgoing'] ?? [];
         } catch (\RuntimeException|\JsonException) {
@@ -142,7 +146,7 @@ final class LinkFieldHook
             $result = $this->results[$candidate['peer']][$candidate['url']];
             if ($result['status'] !== 'resolved') {
                 // Keep a failure outcome even when other anchors in this field resolved.
-                $priority = ['pending' => 5, 'denied' => 4, 'unavailable' => 3, 'unsupported' => 2];
+                $priority = ['pending' => 4, 'denied' => 5, 'unavailable' => 3, 'unsupported' => 2];
                 if (($priority[$result['status']] ?? 0) > ($priority[$pending[$field]['status']] ?? 0)) {
                     $pending[$field]['status'] = $result['status'];
                 }
@@ -187,10 +191,13 @@ final class LinkFieldHook
 
     private function warn(string $table, string $field): void
     {
+        if ($this->background) {
+            return;
+        }
         $key = $table . '.' . $field;
         if (!isset($this->warned[$key])) {
             $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
-                'Some peer links in ' . $key . ' could not be verified. Their original values were kept; they can be retried later.',
+                'Some peer links in ' . $key . ' could not be verified. Their original values were kept. Temporary failures are queued for automatic retry.',
                 'Cross-instance links', ContextualFeedbackSeverity::WARNING, PHP_SAPI !== 'cli',
             ));
             $this->warned[$key] = true;
@@ -227,27 +234,39 @@ final class LinkFieldHook
         if (!$record) {
             return;
         }
-        $connection = $this->connections->getConnectionForTable('tx_typo3totypo3_link_outcome');
         foreach ($pending as $field => $outcome) {
-            if (($record[$field] ?? null) !== $outcome['value']) {
-                continue;
+            if (($record[$field] ?? null) === $outcome['value']) {
+                $this->jobs->record($table, $uid, $field, $record, $outcome);
             }
-            $key = ['source_key' => hash('sha256', $table . ':' . $uid . ':' . $field)];
-            if ($outcome['status'] === 'ordinary') {
-                $connection->delete('tx_typo3totypo3_link_outcome', $key);
-            } else {
-                $data = [
-                    'table_name' => $table, 'record_uid' => $uid, 'field_name' => $field,
-                    'workspace_id' => (int)($record['t3ver_wsid'] ?? 0),
-                    'value_hash' => hash('sha256', $outcome['value']), 'status' => $outcome['status'],
-                    'reference_key' => $outcome['reference_key'], 'checked_at' => time(),
-                ];
-                try {
-                    $connection->insert('tx_typo3totypo3_link_outcome', $key + $data);
-                } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException) {
-                    $connection->update('tx_typo3totypo3_link_outcome', $data, $key);
-                }
-            }
+        }
+    }
+
+    /** Resolve outside the worker's write transaction, using exactly the editor conversion rules. */
+    public function prepare(string $table, int $uid, string $field, string $value): array
+    {
+        $handler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(DataHandler::class);
+        $this->deadline = null;
+        $this->results = [];
+        $this->background = true;
+        try {
+            $fields = [$field => $value];
+            $this->processDatamap_postProcessFieldArray('update', $table, $uid, $fields, $handler);
+            $outcome = $this->outcomes[spl_object_id($handler)][$table][$uid][$field] ?? ['status' => 'disabled'];
+            return ['value' => $fields[$field], 'status' => $outcome['status'], 'reference_key' => $outcome['reference_key'] ?? ''];
+        } finally {
+            unset($this->outcomes[spl_object_id($handler)]);
+            $this->background = false;
+        }
+    }
+
+    /** Already verified replacements must not recurse into networking or job creation. */
+    public function applyPrepared(callable $write): void
+    {
+        $this->applying = true;
+        try {
+            $write();
+        } finally {
+            $this->applying = false;
         }
     }
 }

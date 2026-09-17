@@ -18,3 +18,12 @@ services:
     public: true
   Lizard\Typo3ToTypo3\Link\DestinationStore:
     public: true
+  Lizard\Typo3ToTypo3\Link\PendingStore:
+    public: true
+  Lizard\Typo3ToTypo3\Link\RetryWorker:
+    public: true
+  Lizard\Typo3ToTypo3\Command\RetryCommand:
+    tags:
+      - name: console.command
+        command: 'exchange:retry'
+        description: 'Resolve unchanged pending link fields and RTE anchors'
