@@ -152,6 +152,36 @@ final class LinkReportTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function overviewIncludesHealthyLinksAndFiltersWithoutLeakingForbiddenRecords(): void
+    {
+        $link = (new ManagedLink())->asString($this->reference);
+        $healthy = $this->fixture(['header_link' => $link], 'managed');
+        $forbidden = $this->fixture(['pid' => 2, 'header_link' => $link], 'managed');
+        $pending = $this->fixture();
+        $store = $this->get(DestinationStore::class);
+        $store->record($this->reference, 'resolved', 'https://peer.example/healthy');
+        self::assertCount(2, $this->report->page(filter: 'all')['rows']);
+        self::assertSame([$healthy], array_column($this->report->page(filter: 'resolved')['rows'], 'uid'));
+        self::assertSame([$pending], array_column($this->report->page(filter: 'problems')['rows'], 'uid'));
+        self::assertSame([], $this->rows($healthy), 'Healthy links must not trigger edit warnings');
+        self::assertSame([], $this->report->page(0, 'tt_content', $forbidden, 'all')['rows']);
+        self::assertFalse($this->report->page(filter: 'resolved')['rows'][0]['retry']);
+        $controller = $this->get(ReportController::class);
+        $html = (string)$controller->handleRequest($this->request()->withQueryParams(['status' => 'resolved']))->getBody();
+        self::assertTrue(str_contains($html, 'Healthy'));
+        self::assertTrue(str_contains($html, 'name="token"'), 'GET filter preserves the core route token');
+        self::assertTrue(str_contains($html, 'value="resolved" selected="selected"'));
+        self::assertFalse(str_contains($html, 'value="all" selected="selected"'));
+        self::assertTrue(str_contains($html, 'record/edit') || str_contains($html, 'record_edit'), 'Source opens the core editor');
+        $store->record($this->reference, 'denied');
+        self::assertSame([], $this->report->page(filter: 'resolved')['rows']);
+        self::assertSame([$healthy], array_column($this->report->page(filter: 'denied')['rows'], 'uid'));
+        self::assertStringNotContainsString('/healthy', json_encode($this->report->page(filter: 'all')));
+        $store->record($this->reference, 'resolved', 'https://peer.example/recovered');
+        self::assertSame([$healthy], array_column($this->report->page(filter: 'resolved')['rows'], 'uid'));
+    }
+
+    #[Test]
     public function mixedRteDestinationsHaveSeparateStatesWithoutPrivateUrls(): void
     {
         $other = array_replace($this->reference, ['page' => PeerConfiguration::uuid(), 'language' => 2]);

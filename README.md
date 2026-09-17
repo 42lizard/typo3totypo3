@@ -67,3 +67,5 @@ verified HTTPS from each container. It never disables certificate verification.
 DDEV provides [inter-project HTTPS communication](https://docs.ddev.com/en/stable/users/usage/managing-projects/#inter-project-communication).
 For secure peer setup, the resolver command, and integration checks, see
 [peer resolution](docs/peer-resolution.md).
+
+Deployment and recovery: [operations guide](docs/operations.md).

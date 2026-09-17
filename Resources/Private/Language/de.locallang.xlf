@@ -239,6 +239,14 @@
         <source>Access denial or repeated initial lookup failures affect %s fields. Review the affected records and peer configuration.</source>
         <target>Verweigerter Zugriff oder wiederholt fehlgeschlagene erste Auflösungen betreffen %s Felder. Prüfen Sie die betroffenen Datensätze und die Instanzkonfiguration.</target>
       </trans-unit>
+      <trans-unit id="filter.all"><source>All tracked links</source><target>Alle erfassten Links</target></trans-unit>
+      <trans-unit id="filter.problems"><source>Problems only</source><target>Nur Probleme</target></trans-unit>
+      <trans-unit id="filter.label"><source>Status</source><target>Status</target></trans-unit>
+      <trans-unit id="filter.apply"><source>Apply filter</source><target>Filter anwenden</target></trans-unit>
+      <trans-unit id="state.resolved"><source>Healthy</source><target>Funktionsfähig</target></trans-unit>
+      <trans-unit id="reason.resolved"><source>The destination was verified successfully.</source><target>Das Linkziel wurde erfolgreich geprüft.</target></trans-unit>
+      <trans-unit id="report.overviewIntro"><source>Tracked links in records you can edit in workspace %s. Retry queues a background check; it does not publish drafts.</source><target>Erfasste Links in Datensätzen, die Sie im Arbeitsbereich %s bearbeiten dürfen. Ein erneuter Versuch plant eine Hintergrundprüfung ein; Entwürfe werden nicht veröffentlicht.</target></trans-unit>
+      <trans-unit id="report.filteredEmpty"><source>No matching links in this batch of records you can edit.</source><target>Keine passenden Links in diesem Abschnitt der bearbeitbaren Datensätze.</target></trans-unit>
     </body>
   </file>
 </xliff>

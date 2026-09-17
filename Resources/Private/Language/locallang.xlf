@@ -180,6 +180,14 @@
       <trans-unit id="connection.initialFailure" resname="connection.initialFailure">
         <source>Access denial or repeated initial lookup failures affect %s fields. Review the affected records and peer configuration.</source>
       </trans-unit>
+      <trans-unit id="filter.all"><source>All tracked links</source></trans-unit>
+      <trans-unit id="filter.problems"><source>Problems only</source></trans-unit>
+      <trans-unit id="filter.label"><source>Status</source></trans-unit>
+      <trans-unit id="filter.apply"><source>Apply filter</source></trans-unit>
+      <trans-unit id="state.resolved"><source>Healthy</source></trans-unit>
+      <trans-unit id="reason.resolved"><source>The destination was verified successfully.</source></trans-unit>
+      <trans-unit id="report.overviewIntro"><source>Tracked links in records you can edit in workspace %s. Retry queues a background check; it does not publish drafts.</source></trans-unit>
+      <trans-unit id="report.filteredEmpty"><source>No matching links in this batch of records you can edit.</source></trans-unit>
     </body>
   </file>
 </xliff>

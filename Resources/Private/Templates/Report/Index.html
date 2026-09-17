@@ -3,6 +3,21 @@
 <f:section name="Content">
     <h1><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:module.title" /></h1>
     <p>{intro}</p>
+    <form action="{filterUrl}" method="get" class="mb-3">
+        <f:for each="{filterParameters}" as="value" key="name">
+            <input type="hidden" name="{name}" value="{value}" />
+        </f:for>
+        <label for="exchange-status"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:filter.label" /></label>
+        <select id="exchange-status" name="status" class="form-select">
+            <f:for each="{filters}" as="filter">
+                <f:if condition="{filter.selected}">
+                    <f:then><option value="{filter.value}" selected="selected">{filter.label}</option></f:then>
+                    <f:else><option value="{filter.value}">{filter.label}</option></f:else>
+                </f:if>
+            </f:for>
+        </select>
+        <button type="submit" class="btn btn-default"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:filter.apply" /></button>
+    </form>
     <f:for each="{connections}" as="connection">
         <div class="alert alert-warning">
             <h2 class="h4">{connection.title}</h2>
@@ -44,7 +59,7 @@
                 </table>
             </div>
         </f:then>
-        <f:else><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.empty" /></p></f:else>
+        <f:else><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.filteredEmpty" /></p></f:else>
     </f:if>
     <nav aria-label="{f:translate(key: 'LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.pages')}">
         <f:if condition="{previous}"><a class="btn btn-default" href="{previous}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.previous" /></a></f:if>

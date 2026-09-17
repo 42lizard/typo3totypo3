@@ -21,6 +21,7 @@ use TYPO3\CMS\Core\Schema\TcaSchemaFactory;
 final class LinkReport
 {
     public const MODULE = 'exchange_links';
+    public const FILTERS = ['all', 'problems', 'resolved', 'pending', 'stale', 'unavailable', 'denied', 'expired', 'unsupported', 'too_long', 'disabled', 'database', 'persistence', 'permissions', 'missing', 'invalid'];
 
     public function __construct(
         private readonly ConnectionPool $connections,
@@ -38,11 +39,12 @@ final class LinkReport
     }
 
     /** Bounded pages of tracked fields. No content-table scans and no unfiltered total counts. */
-    public function page(int $offset = 0, ?string $table = null, ?int $uid = null): array
+    public function page(int $offset = 0, ?string $table = null, ?int $uid = null, string $filter = 'problems'): array
     {
         if (!$this->allowed()) {
             return ['rows' => [], 'more' => false];
         }
+        $filter = in_array($filter, self::FILTERS, true) ? $filter : 'problems';
         $user = $GLOBALS['BE_USER'];
         $tables = array_values(array_filter(array_keys($GLOBALS['TCA']),
             static fn($name) => $user->isAdmin() || $user->check('tables_modify', $name)));
@@ -66,7 +68,11 @@ final class LinkReport
         foreach (array_slice($jobs, 0, 100) as $job) {
             $record = $this->authorizedRecord($job);
             if ($record !== null) {
-                array_push($rows, ...$this->describe($job, $record));
+                foreach ($this->describe($job, $record) as $row) {
+                    if ($filter === 'all' || ($filter === 'problems' && $row['status'] !== 'resolved') || $filter === $row['status']) {
+                        $rows[] = $row;
+                    }
+                }
             }
         }
         return ['rows' => $rows, 'more' => count($jobs) > 100];
@@ -227,7 +233,6 @@ final class LinkReport
             $seen[$key] = true;
             $destination = $this->destinations->find($reference);
             $status = $destination['status'] ?? 'missing';
-            if ($status === 'resolved') { continue; }
             // Unavailable/denied destination URLs are deliberately not exposed, even if formerly public.
             $rows[] = array_replace($base, ['status' => $status, 'reason' => self::reason($status), 'retry' => false,
                 'destination' => Labels::text('destination.page', [$reference['page'], $reference['language']]),
@@ -239,7 +244,7 @@ final class LinkReport
     private static function reason(string $status): string
     {
         $key = match ($status) {
-            'pending', 'stale', 'unavailable', 'denied', 'expired', 'unsupported', 'too_long', 'disabled', 'missing' => $status,
+            'resolved', 'pending', 'stale', 'unavailable', 'denied', 'expired', 'unsupported', 'too_long', 'disabled', 'missing' => $status,
             'database', 'persistence', 'permissions' => 'attention',
             default => 'invalid',
         };

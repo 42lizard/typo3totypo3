@@ -8,6 +8,11 @@ permissions, page permissions, web mounts, language restrictions, edit locks,
 auth-mode restrictions and workspace membership. Core form permission events
 remain effective. Read-only records are deliberately omitted.
 
+**All tracked links** is the default view and includes healthy destinations.
+Use **Problems only** for the previous problem report, or filter by a specific
+status. Filters retain the same permissions and workspace scope. Pagination
+preserves the selected filter.
+
 Each entry identifies the source record and field, destination, state and reason,
 last check, and next planned check. Record links open the normal TYPO3 editor.
 Pending URLs display only their origin; paths, query strings, fragments and
@@ -18,7 +23,7 @@ or denied destinations. Mixed RTE fields show each affected managed destination.
 The report reads existing outcomes and current source fields; it does not scan
 unrelated content or contact peers. Results are paged in batches of 100 tracked
 fields before record-level permission filtering. A batch can therefore be empty
-while a later batch contains permitted problems. There is no unfiltered global
+while a later batch contains matching permitted links. There is no unfiltered global
 record count. Deleted, replaced and differently versioned source fields are
 omitted. Existing content without a tracked outcome first appears after a save.
 

@@ -31,7 +31,9 @@ final class ReportController
         if (!$form instanceof BackendFormProtection) {
             return new HtmlResponse(Labels::text('error.session'), 403);
         }
-        $url = (string)$this->uris->buildUriFromRoute(LinkReport::MODULE);
+        $filter = $request->getQueryParams()['status'] ?? 'all';
+        $filter = is_string($filter) && in_array($filter, LinkReport::FILTERS, true) ? $filter : 'all';
+        $url = (string)$this->uris->buildUriFromRoute(LinkReport::MODULE, ['status' => $filter]);
         if ($request->getMethod() === 'POST') {
             $body = $request->getParsedBody();
             if (!is_array($body) || !is_string($body['csrf'] ?? null)
@@ -50,9 +52,15 @@ final class ReportController
             return (new HtmlResponse(Labels::text('error.method'), 405))->withHeader('Allow', 'GET, POST');
         }
         $offset = filter_var($request->getQueryParams()['offset'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1000000]]) ?: 0;
-        $page = $this->report->page($offset);
+        $page = $this->report->page($offset, filter: $filter);
+        $filterUrl = $this->uris->buildUriFromRoute(LinkReport::MODULE);
+        parse_str($filterUrl->getQuery(), $filterParameters);
+        $filters = [];
+        foreach (LinkReport::FILTERS as $value) {
+            $filters[] = ['value' => $value, 'label' => Labels::text(in_array($value, ['all', 'problems'], true) ? 'filter.' . $value : 'state.' . $value), 'selected' => $value === $filter];
+        }
         foreach ($page['rows'] as &$row) {
-            $row['stateLabel'] = Labels::text('state.' . (in_array($row['status'], ['pending', 'stale', 'unavailable', 'denied', 'expired', 'unsupported', 'too_long', 'disabled', 'database', 'persistence', 'permissions', 'missing'], true) ? $row['status'] : 'invalid'));
+            $row['stateLabel'] = Labels::text('state.' . (in_array($row['status'], ['resolved', 'pending', 'stale', 'unavailable', 'denied', 'expired', 'unsupported', 'too_long', 'disabled', 'database', 'persistence', 'permissions', 'missing'], true) ? $row['status'] : 'invalid'));
             $row['edit'] = (string)$this->uris->buildUriFromRoute('record_edit', ['edit' => [$row['table'] => [$row['uid'] => 'edit']], 'returnUrl' => $url]);
         }
         unset($row);
@@ -63,10 +71,10 @@ final class ReportController
         unset($connection);
         $view = $this->templates->create($request);
         $view->setTitle(Labels::text('module.title'));
-        $view->assignMultiple(['intro' => Labels::text('report.intro', [$GLOBALS['BE_USER']->workspace]), 'rows' => $page['rows'], 'connections' => $connectionRows,
+        $view->assignMultiple(['intro' => Labels::text('report.overviewIntro', [$GLOBALS['BE_USER']->workspace]), 'filters' => $filters, 'filterUrl' => (string)$filterUrl, 'filterParameters' => $filterParameters, 'rows' => $page['rows'], 'connections' => $connectionRows,
             'workspace' => $GLOBALS['BE_USER']->workspace, 'url' => $url, 'csrf' => $form->generateToken('exchange-report'),
-            'previous' => $offset ? (string)$this->uris->buildUriFromRoute(LinkReport::MODULE, ['offset' => max(0, $offset - 100)]) : '',
-            'next' => $page['more'] ? (string)$this->uris->buildUriFromRoute(LinkReport::MODULE, ['offset' => $offset + 100]) : '']);
+            'previous' => $offset ? (string)$this->uris->buildUriFromRoute(LinkReport::MODULE, ['status' => $filter, 'offset' => max(0, $offset - 100)]) : '',
+            'next' => $page['more'] ? (string)$this->uris->buildUriFromRoute(LinkReport::MODULE, ['status' => $filter, 'offset' => $offset + 100]) : '']);
         return $view->renderResponse('Report/Index')->withHeader('Cache-Control', 'no-store');
     }
 }
