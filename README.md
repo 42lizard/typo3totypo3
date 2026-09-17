@@ -32,6 +32,10 @@ PHPUnit and TYPO3 testing-framework suites. Final deployment validation remains.
 
 ## Local development
 
+For an existing TYPO3 project, follow the
+[Composer installation guide](https://42lizard.github.io/typo3totypo3/installation/).
+The setup below is for developing and testing the extension itself.
+
 Requirements: Docker and DDEV 1.24.10 or newer with trusted local HTTPS configured.
 The setup was verified with DDEV 1.25.4. Both projects use PHP 8.4 and MariaDB 10.11.
 

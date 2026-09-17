@@ -11,6 +11,7 @@ exclude_docs: |
 nav:
   - Overview: index.md
   - User guides:
+      - Install with Composer: installation.md
       - Connect instances: connections.md
       - Link fields and rich text: link-fields.md
       - Link overview: backend-report.md

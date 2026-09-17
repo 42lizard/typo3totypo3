@@ -17,6 +17,9 @@ still require deployment-specific validation.
 
 ## Get started
 
+For an existing TYPO3 project, [install the extension with Composer](installation.md).
+To try it in the provided development environment:
+
 1. Follow the [repository's local development setup](https://github.com/42lizard/typo3totypo3#local-development)
    to run both TYPO3 versions with DDEV.
 2. [Connect the instances](connections.md) using generated directional tokens
