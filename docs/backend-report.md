@@ -28,6 +28,12 @@ while a later batch contains matching permitted links. There is no unfiltered gl
 record count. Deleted, replaced and differently versioned source fields are
 omitted. Existing content without a tracked outcome first appears after a save.
 
+![TYPO3 14 managed-link overview showing two healthy links, readable destination URLs and the status filter](images/link-overview-v14.jpg)
+
+*Live TYPO3 14.3.7 development backend in English/dark mode. Both the RTE field
+and link field point to the same verified TYPO3 13 destination. The page-tree
+panel is collapsed to leave room for the report table.*
+
 ## Retry and repair
 
 **Queue retry** requeues a permitted pending or attention outcome. It checks the

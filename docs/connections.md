@@ -5,6 +5,11 @@ available on TYPO3 13 and 14. It manages local identity, outgoing connections,
 incoming grants and public-origin aliases. Editors cannot access it or invoke
 its actions directly. All writes and connection tests require a valid form token.
 
+![TYPO3 14 Instance connections showing the local identity and a successful connection test](images/connections-v14.jpg)
+
+*TYPO3 14.3.7 development instance, English interface in dark mode. The connection
+test shown above successfully resolved the TYPO3 13 root page.*
+
 ## Existing installations
 
 Deploy the extension, run `vendor/bin/typo3 extension:setup`, and flush caches.
@@ -34,6 +39,16 @@ file is present. The legacy file is never editable through the module.
    origin; that root must be published and covered by the receiving site grant.
 6. For links in the opposite direction, repeat with a new outgoing connection on
    B and an incoming grant on A. Use an independent token for each direction.
+
+![Outgoing connection with fixed HTTPS endpoint, allowed origins and an empty token replacement field](images/outgoing-connection-v14.jpg)
+
+*Outgoing connection from TYPO3 14 to TYPO3 13. The stored token is not displayed;
+the replacement field is intentionally empty.*
+
+![Incoming grant limited to the main site with a request limit and an empty token field](images/incoming-grant-v14.jpg)
+
+*Incoming grant for the TYPO3 13 caller, limited to site `main` and 120 requests
+per minute. No saved token or token hash is exposed.*
 
 Saved tokens and incoming hashes never appear in subsequent forms. Empty token
 fields preserve saved credentials. **Generate a new outgoing token** rotates the
