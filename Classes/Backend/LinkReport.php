@@ -236,6 +236,7 @@ final class LinkReport
             // Unavailable/denied destination URLs are deliberately not exposed, even if formerly public.
             $rows[] = array_replace($base, ['status' => $status, 'reason' => self::reason($status), 'retry' => false,
                 'destination' => Labels::text('destination.page', [$reference['page'], $reference['language']]),
+                'readableUrl' => $status === 'resolved' ? ($destination['url'] ?? '') : '',
                 'checked' => (int)($destination['checked_at'] ?? 0), 'next' => (int)($destination['next_refresh'] ?? 0)]);
         }
         return $rows;

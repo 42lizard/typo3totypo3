@@ -7,7 +7,7 @@ use TYPO3\CMS\Core\Information\Typo3Version;
 
 return [
     'exchange_links' => [
-        'parent' => (new Typo3Version())->getMajorVersion() >= 14 ? 'content_status' : 'web',
+        'parent' => (new Typo3Version())->getMajorVersion() >= 14 ? 'content' : 'web',
         'access' => 'user',
         'path' => '/module/exchange/links',
         'iconIdentifier' => 'actions-link',

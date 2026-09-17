@@ -1,6 +1,6 @@
 # Backend link report
 
-Open **Web → Cross-instance links** in TYPO3 13 or **Content status →
+Open **Web → Cross-instance links** in TYPO3 13 or **Content →
 Cross-instance links** in TYPO3 14. Grant the `exchange_links` backend module to
 editor groups. The module reports tracked fields in the user's current workspace;
 editors see only records and fields they can edit. This includes table and field
@@ -17,7 +17,8 @@ Each entry identifies the source record and field, destination, state and reason
 last check, and next planned check. Record links open the normal TYPO3 editor.
 Pending URLs display only their origin; paths, query strings, fragments and
 credentials are omitted. Managed references display the page UUID and selected
-language. The report does not disclose previously public URLs for unavailable
+language. Healthy destinations also show their current verified readable URL
+(without per-link query strings or fragments). The report does not disclose previously public URLs for unavailable
 or denied destinations. Mixed RTE fields show each affected managed destination.
 
 The report reads existing outcomes and current source fields; it does not scan

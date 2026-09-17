@@ -169,6 +169,7 @@ final class LinkReportTest extends FunctionalTestCase
         $controller = $this->get(ReportController::class);
         $html = (string)$controller->handleRequest($this->request()->withQueryParams(['status' => 'resolved']))->getBody();
         self::assertTrue(str_contains($html, 'Healthy'));
+        self::assertTrue(str_contains($html, 'https://peer.example/healthy'), 'Verified readable destination is displayed');
         self::assertTrue(str_contains($html, 'name="token"'), 'GET filter preserves the core route token');
         self::assertTrue(str_contains($html, 'value="resolved" selected="selected"'));
         self::assertFalse(str_contains($html, 'value="all" selected="selected"'));
@@ -179,6 +180,9 @@ final class LinkReportTest extends FunctionalTestCase
         self::assertStringNotContainsString('/healthy', json_encode($this->report->page(filter: 'all')));
         $store->record($this->reference, 'resolved', 'https://peer.example/recovered');
         self::assertSame([$healthy], array_column($this->report->page(filter: 'resolved')['rows'], 'uid'));
+        self::assertSame('https://peer.example/recovered', $this->report->page(filter: 'resolved')['rows'][0]['readableUrl']);
+        $store->record($this->reference, 'unavailable');
+        self::assertSame('', $this->report->page(filter: 'unavailable')['rows'][0]['readableUrl']);
     }
 
     #[Test]

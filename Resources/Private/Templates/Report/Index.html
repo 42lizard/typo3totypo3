@@ -41,7 +41,7 @@
                     <f:for each="{rows}" as="row">
                         <tr>
                             <td><a href="{row.edit}">{row.table} #{row.uid}</a><br />{row.field}</td>
-                            <td>{row.destination}</td>
+                            <td><f:if condition="{row.readableUrl}"><div>{row.readableUrl}</div></f:if>{row.destination}</td>
                             <td><strong>{row.stateLabel}</strong><br />{row.reason}</td>
                             <td><f:if condition="{row.checked}"><f:format.date format="Y-m-d H:i">{row.checked}</f:format.date></f:if><br /><f:if condition="{row.next}"><f:format.date format="Y-m-d H:i">{row.next}</f:format.date></f:if></td>
                             <td><f:if condition="{row.retry}">
