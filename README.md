@@ -3,8 +3,19 @@
 An extension for data exchange between TYPO3 instances. The first feature is
 maintainable cross-instance page links; see the [approved design](docs/cross-instance-links.md).
 
-Remaining implementation is tracked in [GitHub issue #1](https://github.com/42lizard/typo3totypo3/issues/1)
-and its six dependent implementation tickets.
+## Beta status
+
+Ready for beta testing on TYPO3 13.4 and 14.3, with PHP 8.2 or newer.
+Start with disposable installations or staging sites. Production scheduler,
+external-cache integration, and the ten-peer/10,000-reference throughput target
+still need deployment-specific validation; see the [operations guide](docs/operations.md).
+
+Report reproducible bugs in [GitHub Issues](https://github.com/42lizard/typo3totypo3/issues),
+including TYPO3/PHP versions, reproduction steps, and expected versus actual
+behavior. Remove tokens, encryption keys, credentials, and private content from
+reports and screenshots.
+
+Progress is tracked in [GitHub issue #1](https://github.com/42lizard/typo3totypo3/issues/1).
 
 The repository provides two working development installations and an authenticated
 public-page resolver with stable identities. [Link fields](docs/link-fields.md)
@@ -71,3 +82,7 @@ For secure peer setup, the resolver command, and integration checks, see
 Deployment and recovery: [operations guide](docs/operations.md).
 
 Manage peers under **System → Instance connections**; see [pairing and migration](docs/connections.md).
+
+## License
+
+GPL-2.0-or-later; see [LICENSE](LICENSE).

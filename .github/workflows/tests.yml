@@ -1,0 +1,39 @@
+name: PHPUnit
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  functional:
+    name: TYPO3 ${{ matrix.typo3 }} / PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        typo3: ['13', '14']
+        php: ['8.2', '8.4']
+    defaults:
+      run:
+        working-directory: dev/typo3-v${{ matrix.typo3 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@b604ade2a87db23f8871b7182e69ec5e75effb45 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, mbstring, gd, pdo_sqlite, sqlite3, sodium, zip
+          coverage: none
+          tools: composer:v2
+      - name: Link extension source
+        run: sudo ln -s "$GITHUB_WORKSPACE" /opt/typo3-to-typo3
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Run isolated PHPUnit tests
+        run: TYPO3_PATH_ROOT="$PWD/public" vendor/bin/phpunit -c ../../Tests/Functional/phpunit.xml

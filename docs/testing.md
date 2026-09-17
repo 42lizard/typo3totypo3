@@ -4,6 +4,17 @@ All extension tests live in `Tests/`. Development dependencies provide PHPUnit
 11 and TYPO3 testing framework 9.7 for TYPO3 13 and 14. Tests never run against
 the development content databases.
 
+## GitHub Actions
+
+The `PHPUnit` workflow runs on pushes, pull requests, and manual dispatches.
+It runs the existing isolated functional suite against both committed TYPO3
+13/14 lockfiles on PHP 8.2 and 8.4. These are PHPUnit tests using TYPO3's testing
+framework, rather than a separate unit-test suite. SQLite fixtures are created
+on the disposable runner; no DDEV, credentials, or live peers are needed.
+The paired-instance HTTPS integration suite remains a local DDEV check.
+
+## Local execution
+
 Prepare the Testing contexts in the existing DDEV projects:
 
 ```bash
