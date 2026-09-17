@@ -9,3 +9,5 @@
 /dev/*/.local-credentials
 /dev/*/.peer-config.json
 /.phpunit.cache/
+/site/
+/.venv-docs/

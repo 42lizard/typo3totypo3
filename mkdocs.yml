@@ -1,0 +1,35 @@
+site_name: TYPO3 to TYPO3
+site_description: Secure, maintainable page links between TYPO3 instances
+site_url: https://42lizard.github.io/typo3totypo3/
+repo_url: https://github.com/42lizard/typo3totypo3
+edit_uri: edit/main/docs/
+theme:
+  name: readthedocs
+  highlightjs: false
+exclude_docs: |
+  /agents/
+nav:
+  - Overview: index.md
+  - User guides:
+      - Connect instances: connections.md
+      - Link fields and rich text: link-fields.md
+      - Link overview: backend-report.md
+  - Administration:
+      - Deploy and operate: operations.md
+      - Delayed resolution: delayed-resolution.md
+      - Destination refresh: destination-refresh.md
+  - Development:
+      - Tests: testing.md
+      - Documentation site: documentation.md
+      - Peer resolver API: peer-resolution.md
+      - Design: cross-instance-links.md
+  - Architecture decisions:
+      - Stable destination identity: adr/0001-stable-destination-identity.md
+      - Asynchronous resolution: adr/0002-resolve-links-asynchronously-after-save-failures.md
+      - Backend connections: adr/0003-manage-connections-in-the-backend.md
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    anchors: warn
+    unrecognized_links: warn

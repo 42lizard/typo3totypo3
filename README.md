@@ -3,6 +3,9 @@
 An extension for data exchange between TYPO3 instances. The first feature is
 maintainable cross-instance page links; see the [approved design](docs/cross-instance-links.md).
 
+**[Read the documentation](https://42lizard.github.io/typo3totypo3/)** — setup,
+backend screenshots, operation, and development guides.
+
 ## Beta status
 
 Ready for beta testing on TYPO3 13.4 and 14.3, with PHP 8.2 or newer.
