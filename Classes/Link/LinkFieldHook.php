@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lizard\Typo3ToTypo3\Link;
 
+use Lizard\Typo3ToTypo3\Backend\Labels;
 use Lizard\Typo3ToTypo3\PeerClient;
 use Lizard\Typo3ToTypo3\PeerConfiguration;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -194,14 +195,19 @@ final class LinkFieldHook
         if ($this->background) {
             return;
         }
-        $key = $table . '.' . $field;
-        if (!isset($this->warned[$key])) {
-            $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
-                'Some peer links in ' . $key . ' could not be verified. Their original values were kept. Temporary failures are queued for automatic retry.',
-                'Cross-instance links', ContextualFeedbackSeverity::WARNING, PHP_SAPI !== 'cli',
-            ));
-            $this->warned[$key] = true;
+        $this->warned[$table . '.' . $field] = true;
+    }
+
+    public function processDatamap_afterAllOperations(DataHandler $handler): void
+    {
+        if (!$handler->isOuterMostInstance() || $this->background || $this->applying || !$this->warned) {
+            return;
         }
+        $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
+            Labels::text('warning.save', [implode(', ', array_keys($this->warned))]),
+            Labels::text('module.title'), ContextualFeedbackSeverity::WARNING, PHP_SAPI !== 'cli',
+        ));
+        $this->warned = [];
     }
 
     private function resolveBatch(string $peer, array $urls): void

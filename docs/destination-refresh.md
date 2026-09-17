@@ -97,10 +97,10 @@ routes to a page before the first managed reference was established.
 
 ## Verification
 
-Run in each disposable DDEV instance, without concurrent manual editing:
+Run from the repository root after [test setup](testing.md):
 
 ```bash
-ddev exec php /opt/typo3-to-typo3/dev/test-refresh.php
+bash Tests/Build/run.sh --filter RefreshTest
 ```
 
 The check temporarily changes peer/site configuration and creates pages and

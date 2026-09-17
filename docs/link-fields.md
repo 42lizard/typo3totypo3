@@ -73,14 +73,14 @@ and an approved destination origin to render links.
 
 ## Verification
 
-From each paired development instance directory:
+From the repository root after [Testing context setup](testing.md):
 
 ```bash
-ddev exec php /opt/typo3-to-typo3/dev/test-link-fields.php
-ddev exec php /opt/typo3-to-typo3/dev/test-rte.php
-ddev exec php /opt/typo3-to-typo3/dev/test-retry.php
-ddev exec php /opt/typo3-to-typo3/dev/test-refresh.php
-ddev exec php /opt/typo3-to-typo3/dev/test-resolver.php
+bash Tests/Build/run.sh --filter LinkFieldsTest
+bash Tests/Build/run.sh --filter RteTest
+bash Tests/Build/run.sh --filter RetryTest
+bash Tests/Build/run.sh --filter RefreshTest
+bash Tests/Build/run.sh --filter ResolverTest
 ```
 
 The link-field check uses real DataHandler saves and standard TYPO3 typolink
@@ -88,7 +88,7 @@ rendering on both supported major versions. It creates temporary content,
 removes it afterward and clears local caches. Controlled transport responses
 exercise batching, failures and the shared time budget; a real HTTPS lookup
 verifies cross-version conversion. Do not run these checks alongside manual
-editing in the same development instances.
+editing in the dedicated test instances. The suite refuses to run in Development context.
 
 The RTE checks also cover copied and localized content, draft-only workspace
 saves, mixed anchors, escaped HTML, and preservation of unrelated markup.

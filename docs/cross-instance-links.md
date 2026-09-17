@@ -5,8 +5,9 @@ incorporated, including asynchronous resolution after slow or failed lookups.
 Development instances and the [authenticated peer resolver](peer-resolution.md)
 are implemented, together with link-field/RTE conversion, local rendering and
 [delayed initial resolution](delayed-resolution.md) and
-[scheduled destination refresh](destination-refresh.md). Backend reporting and
-the final deployment validation remain subsequent milestones.
+[scheduled destination refresh](destination-refresh.md). The localized
+[backend report](backend-report.md) is implemented. Final deployment validation
+remains a subsequent milestone.
 
 ## Purpose and first release
 

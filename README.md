@@ -11,8 +11,10 @@ public-page resolver with stable identities. [Link fields](docs/link-fields.md)
 and RTE anchors convert on save and render from persistent local destination
 data. [Background retries](docs/delayed-resolution.md) complete failed initial
 lookups without overwriting newer edits. [Scheduled destination refresh](docs/destination-refresh.md)
-updates URLs and availability and invalidates dependent page caches. The backend
-report is the next milestone.
+updates URLs and availability and invalidates dependent page caches. The
+[backend report](docs/backend-report.md) provides permission-aware status and retry
+actions in English and German. See [testing](docs/testing.md) for the extension’s
+PHPUnit and TYPO3 testing-framework suites. Final deployment validation remains.
 
 ## Local development
 

@@ -1,0 +1,54 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Module" />
+<f:section name="Content">
+    <h1><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:module.title" /></h1>
+    <p>{intro}</p>
+    <f:for each="{connections}" as="connection">
+        <div class="alert alert-warning">
+            <h2 class="h4">{connection.title}</h2>
+            <p>{connection.reason}</p>
+            <f:if condition="{connection.retry}">
+                <form action="{url}" method="post">
+                    <input type="hidden" name="csrf" value="{csrf}" />
+                    <input type="hidden" name="action" value="resume" />
+                    <input type="hidden" name="peer" value="{connection.peer}" />
+                    <button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.resume" /></button>
+                </form>
+            </f:if>
+        </div>
+    </f:for>
+    <f:if condition="{rows}">
+        <f:then>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead><tr><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.record" /></th><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.destination" /></th><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.state" /></th><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.check" /></th><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.action" /></th></tr></thead>
+                    <tbody>
+                    <f:for each="{rows}" as="row">
+                        <tr>
+                            <td><a href="{row.edit}">{row.table} #{row.uid}</a><br />{row.field}</td>
+                            <td>{row.destination}</td>
+                            <td><strong>{row.stateLabel}</strong><br />{row.reason}</td>
+                            <td><f:if condition="{row.checked}"><f:format.date format="Y-m-d H:i">{row.checked}</f:format.date></f:if><br /><f:if condition="{row.next}"><f:format.date format="Y-m-d H:i">{row.next}</f:format.date></f:if></td>
+                            <td><f:if condition="{row.retry}">
+                                <form action="{url}" method="post">
+                                    <input type="hidden" name="csrf" value="{csrf}" />
+                                    <input type="hidden" name="action" value="retry" />
+                                    <input type="hidden" name="key" value="{row.key}" />
+                                    <input type="hidden" name="generation" value="{row.generation}" />
+                                    <button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.retry" /></button>
+                                </form>
+                            </f:if></td>
+                        </tr>
+                    </f:for>
+                    </tbody>
+                </table>
+            </div>
+        </f:then>
+        <f:else><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.empty" /></p></f:else>
+    </f:if>
+    <nav aria-label="{f:translate(key: 'LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.pages')}">
+        <f:if condition="{previous}"><a class="btn btn-default" href="{previous}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.previous" /></a></f:if>
+        <f:if condition="{next}"><a class="btn btn-default" href="{next}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.next" /></a></f:if>
+    </nav>
+</f:section>
+</html>

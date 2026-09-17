@@ -34,3 +34,12 @@ services:
       - name: console.command
         command: 'exchange:refresh'
         description: 'Refresh managed destinations by stable identity'
+  Lizard\Typo3ToTypo3\Backend\LinkReport:
+    public: true
+  Lizard\Typo3ToTypo3\Backend\ReportController:
+    public: true
+  Lizard\Typo3ToTypo3\Backend\EditWarnings:
+    public: true
+  Lizard\Typo3ToTypo3\Backend\ConnectionToolbar:
+    tags:
+      - name: backend.toolbar.item

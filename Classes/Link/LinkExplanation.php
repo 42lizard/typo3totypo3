@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lizard\Typo3ToTypo3\Link;
 
+use Lizard\Typo3ToTypo3\Backend\Labels;
 use TYPO3\CMS\Backend\Form\Event\ModifyLinkExplanationEvent;
 use TYPO3\CMS\Core\Attribute\AsEventListener;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -22,16 +23,16 @@ final class LinkExplanation
         }
         $destination = (new ManagedLink())->resolveHandlerData($reference)['valid']
             ? $this->destinations->find($reference) : null;
-        $text = 'Cross-instance page — destination data missing';
+        $text = Labels::text('explanation.missing');
         if ($destination) {
             $text = $destination['url']
                 . (isset($reference['query']) ? '?' . $reference['query'] : '')
                 . (isset($reference['fragment']) ? '#' . $reference['fragment'] : '');
             if ($destination['status'] !== 'resolved') {
                 $text .= ' (' . match ($destination['status']) {
-                    'stale' => 'last known address',
-                    'denied' => 'access denied',
-                    default => 'unavailable',
+                    'stale' => Labels::text('explanation.stale'),
+                    'denied' => Labels::text('explanation.denied'),
+                    default => Labels::text('explanation.unavailable'),
                 } . ')';
             }
         }

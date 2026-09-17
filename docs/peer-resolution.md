@@ -159,13 +159,13 @@ do not receive a managed reference. Public-page lookup uses TYPO3's internal
 
 ## Verification
 
-Run this from each instance directory after pairing:
+Run this from the repository root after [test setup](testing.md):
 
 ```bash
-ddev exec php /opt/typo3-to-typo3/dev/test-resolver.php
+bash Tests/Build/run.sh --filter ResolverTest
 ```
 
-The check requires the named Development-context DDEV projects. It creates
+The check requires the Testing contexts in the existing DDEV projects. It creates
 temporary pages and grants, temporarily adds a test language, flushes local
 caches, and restores/removes its changes afterward. Do not run concurrently with
 manual configuration edits. It exercises real HTTP requests and cross-version

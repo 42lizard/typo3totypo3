@@ -18,5 +18,14 @@
         "typo3/cms": {
             "extension-key": "typo3_to_typo3"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "typo3/testing-framework": "^9.0 || ^10.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Lizard\\Typo3ToTypo3\\Tests\\": "Tests/"
+        }
     }
 }

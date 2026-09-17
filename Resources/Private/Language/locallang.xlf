@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" datatype="plaintext" original="EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf" product-name="typo3_to_typo3">
+    <header/>
+    <body>
+      <trans-unit id="module.title" resname="module.title">
+        <source>Cross-instance links</source>
+      </trans-unit>
+      <trans-unit id="module.description" resname="module.description">
+        <source>Pending links, unavailable destinations and connection status</source>
+      </trans-unit>
+      <trans-unit id="report.intro" resname="report.intro">
+        <source>Outstanding problems in records you can edit in workspace %s. Retry queues a background check; it does not publish drafts.</source>
+      </trans-unit>
+      <trans-unit id="connection.title" resname="connection.title">
+        <source>Connection %s</source>
+      </trans-unit>
+      <trans-unit id="connection.invalid" resname="connection.invalid">
+        <source>Peer configuration is disabled or invalid. Ask a system administrator to repair it.</source>
+      </trans-unit>
+      <trans-unit id="connection.identity" resname="connection.identity">
+        <source>Invalid peer identity configuration.</source>
+      </trans-unit>
+      <trans-unit id="connection.failure" resname="connection.failure">
+        <source>Repeated refresh failures or access denial affect %s destinations. Check credentials, grants, endpoint and scheduled jobs.</source>
+      </trans-unit>
+      <trans-unit id="action.resume" resname="action.resume">
+        <source>Recheck after repair</source>
+      </trans-unit>
+      <trans-unit id="action.retry" resname="action.retry">
+        <source>Queue retry</source>
+      </trans-unit>
+      <trans-unit id="action.openReport" resname="action.openReport">
+        <source>Open link report</source>
+      </trans-unit>
+      <trans-unit id="column.record" resname="column.record">
+        <source>Record / field</source>
+      </trans-unit>
+      <trans-unit id="column.destination" resname="column.destination">
+        <source>Destination</source>
+      </trans-unit>
+      <trans-unit id="column.state" resname="column.state">
+        <source>State</source>
+      </trans-unit>
+      <trans-unit id="column.check" resname="column.check">
+        <source>Last check / next check</source>
+      </trans-unit>
+      <trans-unit id="column.action" resname="column.action">
+        <source>Action</source>
+      </trans-unit>
+      <trans-unit id="report.empty" resname="report.empty">
+        <source>No outstanding problems in this batch of records you can edit.</source>
+      </trans-unit>
+      <trans-unit id="report.pages" resname="report.pages">
+        <source>Report pages</source>
+      </trans-unit>
+      <trans-unit id="action.previous" resname="action.previous">
+        <source>Previous records</source>
+      </trans-unit>
+      <trans-unit id="action.next" resname="action.next">
+        <source>Next records</source>
+      </trans-unit>
+      <trans-unit id="destination.original" resname="destination.original">
+        <source>Original link(s) in this field</source>
+      </trans-unit>
+      <trans-unit id="destination.invalid" resname="destination.invalid">
+        <source>Invalid managed reference</source>
+      </trans-unit>
+      <trans-unit id="destination.page" resname="destination.page">
+        <source>Page %s · language %s</source>
+      </trans-unit>
+      <trans-unit id="error.denied" resname="error.denied">
+        <source>Access denied.</source>
+      </trans-unit>
+      <trans-unit id="error.session" resname="error.session">
+        <source>A backend session is required.</source>
+      </trans-unit>
+      <trans-unit id="error.token" resname="error.token">
+        <source>Invalid form token.</source>
+      </trans-unit>
+      <trans-unit id="error.action" resname="error.action">
+        <source>Action unavailable or record changed. Reload the report.</source>
+      </trans-unit>
+      <trans-unit id="error.method" resname="error.method">
+        <source>Method not allowed.</source>
+      </trans-unit>
+      <trans-unit id="warning.edit" resname="warning.edit">
+        <source>Cross-instance links need attention in: %s. Open the Cross-instance links report for details. Your content remains editable.</source>
+      </trans-unit>
+      <trans-unit id="warning.save" resname="warning.save">
+        <source>Some peer links could not be verified in: %s. Original values were kept. Temporary failures are queued for retry; see the Cross-instance links report.</source>
+      </trans-unit>
+      <trans-unit id="warning.connections" resname="warning.connections">
+        <source>Cross-instance connections need attention</source>
+      </trans-unit>
+      <trans-unit id="explanation.missing" resname="explanation.missing">
+        <source>Cross-instance page — destination data missing</source>
+      </trans-unit>
+      <trans-unit id="explanation.stale" resname="explanation.stale">
+        <source>last known address</source>
+      </trans-unit>
+      <trans-unit id="explanation.denied" resname="explanation.denied">
+        <source>access denied</source>
+      </trans-unit>
+      <trans-unit id="explanation.unavailable" resname="explanation.unavailable">
+        <source>unavailable</source>
+      </trans-unit>
+      <trans-unit id="reason.pending" resname="reason.pending">
+        <source>Initial lookup failed temporarily. Automatic retry is scheduled.</source>
+      </trans-unit>
+      <trans-unit id="reason.stale" resname="reason.stale">
+        <source>Refresh failed temporarily. The last verified URL remains clickable.</source>
+      </trans-unit>
+      <trans-unit id="reason.unavailable" resname="reason.unavailable">
+        <source>The peer cannot provide a public page in the selected language. Managed links render as text.</source>
+      </trans-unit>
+      <trans-unit id="reason.denied" resname="reason.denied">
+        <source>Peer access was denied. Ask an administrator to check the connection.</source>
+      </trans-unit>
+      <trans-unit id="reason.expired" resname="reason.expired">
+        <source>The seven-day retry window ended. Review the original link and retry explicitly.</source>
+      </trans-unit>
+      <trans-unit id="reason.unsupported" resname="reason.unsupported">
+        <source>This URL cannot be converted to a supported public page link.</source>
+      </trans-unit>
+      <trans-unit id="reason.too_long" resname="reason.too_long">
+        <source>The managed reference exceeds this field’s length limit. The original value was kept.</source>
+      </trans-unit>
+      <trans-unit id="reason.disabled" resname="reason.disabled">
+        <source>Peer resolution is disabled or not configured.</source>
+      </trans-unit>
+      <trans-unit id="reason.attention" resname="reason.attention">
+        <source>Automatic conversion needs administrator attention. The original value was kept.</source>
+      </trans-unit>
+      <trans-unit id="reason.missing" resname="reason.missing">
+        <source>No local destination data exists for this reference.</source>
+      </trans-unit>
+      <trans-unit id="reason.invalid" resname="reason.invalid">
+        <source>Review this link in the record editor; its saved resolution state is no longer current.</source>
+      </trans-unit>
+      <trans-unit id="state.pending" resname="state.pending">
+        <source>Pending resolution</source>
+      </trans-unit>
+      <trans-unit id="state.stale" resname="state.stale">
+        <source>Stale destination</source>
+      </trans-unit>
+      <trans-unit id="state.unavailable" resname="state.unavailable">
+        <source>Unavailable destination</source>
+      </trans-unit>
+      <trans-unit id="state.denied" resname="state.denied">
+        <source>Access denied</source>
+      </trans-unit>
+      <trans-unit id="state.expired" resname="state.expired">
+        <source>Retry window expired</source>
+      </trans-unit>
+      <trans-unit id="state.unsupported" resname="state.unsupported">
+        <source>Unsupported URL</source>
+      </trans-unit>
+      <trans-unit id="state.too_long" resname="state.too_long">
+        <source>Field length exceeded</source>
+      </trans-unit>
+      <trans-unit id="state.disabled" resname="state.disabled">
+        <source>Disabled</source>
+      </trans-unit>
+      <trans-unit id="state.database" resname="state.database">
+        <source>Database attention required</source>
+      </trans-unit>
+      <trans-unit id="state.persistence" resname="state.persistence">
+        <source>Save attention required</source>
+      </trans-unit>
+      <trans-unit id="state.permissions" resname="state.permissions">
+        <source>Permission attention required</source>
+      </trans-unit>
+      <trans-unit id="state.missing" resname="state.missing">
+        <source>Destination data missing</source>
+      </trans-unit>
+      <trans-unit id="state.invalid" resname="state.invalid">
+        <source>Review required</source>
+      </trans-unit>
+      <trans-unit id="connection.initialFailure" resname="connection.initialFailure">
+        <source>Access denial or repeated initial lookup failures affect %s fields. Review the affected records and peer configuration.</source>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

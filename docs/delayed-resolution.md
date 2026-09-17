@@ -91,10 +91,10 @@ verified destination URLs and the backend report remain separate milestones.
 
 ## Verification
 
-Run in each disposable DDEV instance:
+Run from the repository root after [test setup](testing.md):
 
 ```bash
-ddev exec php /opt/typo3-to-typo3/dev/test-retry.php
+bash Tests/Build/run.sh --filter RetryTest
 ```
 
 Checks include real peer recovery, backoff/expiry/manual retry, source edits

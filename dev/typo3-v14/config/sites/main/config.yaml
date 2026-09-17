@@ -1,4 +1,7 @@
 base: 'https://t3exchange-v14.ddev.site/'
+baseVariants:
+  - base: 'https://t3exchange-v14-testing.ddev.site/'
+    condition: 'applicationContext == "Testing"'
 dependencies:
   - typo3/fluid-styled-content
   - typo3/fluid-styled-content-css

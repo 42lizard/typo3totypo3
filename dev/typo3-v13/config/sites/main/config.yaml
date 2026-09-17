@@ -1,4 +1,7 @@
 base: 'https://t3exchange-v13.ddev.site/'
+baseVariants:
+  - base: 'https://t3exchange-v13-testing.ddev.site/'
+    condition: 'applicationContext == "Testing"'
 errorHandling: {  }
 languages:
   -
