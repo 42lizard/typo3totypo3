@@ -13,6 +13,12 @@ framework, rather than a separate unit-test suite. SQLite fixtures are created
 on the disposable runner; no DDEV, credentials, or live peers are needed.
 The paired-instance HTTPS integration suite remains a local DDEV check.
 
+CI also runs `Tests/Build/check-site-preservation.sh` against a disposable SQLite
+installation. It checks that initial setup preserves existing site YAML and
+TypoScript, repeat installation leaves them unchanged, and the Development and
+Testing contexts select their respective base URLs. From an installed development
+instance, run it with `ddev exec bash /opt/typo3-to-typo3/Tests/Build/check-site-preservation.sh`.
+
 ## Local execution
 
 Prepare the Testing contexts in the existing DDEV projects:
