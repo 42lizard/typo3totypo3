@@ -6,6 +6,7 @@ webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames:
     - t3exchange-v14-testing
+    - t3exchange-v14-testing-c
 additional_fqdns: []
 database:
     type: mariadb

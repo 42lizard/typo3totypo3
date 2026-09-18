@@ -1,5 +1,7 @@
 base: 'https://t3exchange-v14.ddev.site/'
 baseVariants:
+  - base: 'https://t3exchange-v14-testing-c.ddev.site/'
+    condition: 'applicationContext == "Testing/PeerC"'
   - base: 'https://t3exchange-v14-testing.ddev.site/'
     condition: 'applicationContext == "Testing"'
 dependencies:

@@ -16,7 +16,12 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-if (PHP_SAPI !== 'cli' || getenv('TYPO3_CONTEXT') !== 'Testing' || getenv('TYPO3_PATH_APP') !== '/var/www/html/var/exchange-testing') {
+$testingDatabase = match (getenv('TYPO3_CONTEXT') . ':' . getenv('TYPO3_PATH_APP')) {
+    'Testing:/var/www/html/var/exchange-testing' => 'db_testing',
+    'Testing/PeerC:/var/www/html/var/exchange-testing-c' => 'db_testing_c',
+    default => null,
+};
+if (PHP_SAPI !== 'cli' || $testingDatabase === null) {
     throw new RuntimeException('This fixture requires the isolated DDEV Testing context.');
 }
 $input = json_decode(stream_get_contents(STDIN), true, flags: JSON_THROW_ON_ERROR);
@@ -28,9 +33,9 @@ $container = Bootstrap::init($loader);
 Bootstrap::initializeBackendUser(CommandLineUserAuthentication::class);
 Bootstrap::initializeBackendAuthentication();
 $db = $container->get(ConnectionPool::class)->getConnectionForTable('pages');
-if ($db->getDatabase() !== 'db_testing') { throw new RuntimeException('Refusing non-test database.'); }
-$backupPath = '/var/www/html/var/exchange-testing/paired-fixture-backup.json';
-$activationPath = '/var/www/html/var/exchange-testing/config/system/exchange-environment.php';
+if ($db->getDatabase() !== $testingDatabase) { throw new RuntimeException('Refusing non-test database.'); }
+$backupPath = getenv('TYPO3_PATH_APP') . '/paired-fixture-backup.json';
+$activationPath = getenv('TYPO3_PATH_APP') . '/config/system/exchange-environment.php';
 $saveBackup = static function (array $backup) use ($backupPath): void {
     file_put_contents($backupPath, json_encode($backup, JSON_THROW_ON_ERROR), LOCK_EX);
     chmod($backupPath, 0600);
@@ -46,6 +51,28 @@ $change = static function (array $data) use ($container): DataHandler {
 };
 $result = [];
 switch ($input['operation']) {
+    case 'ready':
+        if ($backup !== null || $store->hasConfiguration()) { throw new RuntimeException('Testing configuration is occupied; recover the previous fixture first.'); }
+        $result = ['database' => $db->getDatabase(), 'context' => getenv('TYPO3_CONTEXT'),
+            'keyFingerprint' => hash('sha256', $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'])];
+        break;
+    case 'request':
+        if (!$backup) { throw new RuntimeException('Missing test fixture.'); }
+        if (!in_array($input['origin'], ['https://t3exchange-v13-testing.ddev.site', 'https://t3exchange-v14-testing.ddev.site', 'https://t3exchange-v14-testing-c.ddev.site'], true)
+            || !in_array($input['path'], ['/typo3-exchange/v1/resolve', '/typo3-exchange/v2/capabilities'], true)) {
+            throw new RuntimeException('Only fixed Testing endpoints may be requested.');
+        }
+        $response = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Http\RequestFactory::class)->request($input['origin'] . $input['path'], 'POST', [
+            'headers' => $input['headers'] + ['Content-Type' => 'application/json'],
+            'body' => json_encode($input['payload'], JSON_THROW_ON_ERROR),
+            'http_errors' => false, 'allow_redirects' => false, 'timeout' => 5, 'verify' => true,
+        ]);
+        $result = ['status' => $response->getStatusCode(), 'body' => json_decode((string)$response->getBody(), true, flags: JSON_THROW_ON_ERROR)];
+        break;
+    case 'configure':
+        if (!$backup) { throw new RuntimeException('Missing test fixture.'); }
+        $store->save($input['config'], $store->read()['revision']);
+        break;
     case 'rollback':
         if (!$backup) { throw new RuntimeException('Missing test fixture.'); }
         $state = $store->read();

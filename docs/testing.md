@@ -27,9 +27,9 @@ Prepare the Testing contexts in the existing DDEV projects:
 bash Tests/Build/setup.sh
 ```
 
-Each existing project (`dev/typo3-v13` and `dev/typo3-v14`) serves two nginx
-vhosts: the normal development hostname and `t3exchange-v13-testing.ddev.site`
-or `t3exchange-v14-testing.ddev.site`. The second vhost sets `TYPO3_CONTEXT=Testing`.
+Each existing project (`dev/typo3-v13` and `dev/typo3-v14`) serves its normal
+development hostname and a Testing vhost: `t3exchange-v13-testing.ddev.site`
+or `t3exchange-v14-testing.ddev.site`. These vhosts set `TYPO3_CONTEXT=Testing`.
 Project-owned `config/system/additional.php` checks the context and includes
 `additionalTesting.php`, which selects `db_testing` instead of `db`.
 Site YAML uses a `baseVariants` condition (`applicationContext == "Testing"`)
@@ -41,6 +41,14 @@ Its `additional.php` loads the project-owned file. Setup copies the committed
 site configuration, including its context variant, and seeds only a test root page.
 No development database content or credentials are copied. There are no extra
 DDEV projects or containers. Setup is repeatable and does not reset data.
+
+The same setup also prepares a third independent peer inside the v14 project:
+`t3exchange-v14-testing-c.ddev.site`, context `Testing/PeerC`, database
+`db_testing_c`, and application directory `var/exchange-testing-c`. It shares
+code and the web/database containers, but has a separate encryption key,
+configuration, caches and database. A dedicated nginx vhost sets that context;
+`additionalTesting.php` selects its database and a site `baseVariants` condition
+selects its hostname. It has no legacy JSON pairing configuration.
 
 Run both suites on both supported versions:
 
@@ -102,12 +110,30 @@ Run from the repository root with host PHP and both existing DDEV projects runni
 php dev/typo3-v13/vendor/bin/phpunit --no-configuration Tests/Paired/ExchangePairTest.php
 ```
 
-This test controls only the v13/v14 Testing contexts. It exercises usage in both
+The cross-version test controls only the v13/v14 Testing contexts. It exercises usage in both
 HTTPS directions, renames, unavailability, last-reference removal, and the exact
 rollback commit documented in [usage and notifications](usage-notifications.md).
 The archived extension is selected only in a CLI process; shared Composer files
 and the Development backend are unchanged. The legacy-server response is passed
 through the current client to test explicit removal of the environment binding.
+
+The same PHPUnit file also runs the three-peer trust test. A is v13 Testing,
+B is v14 Testing, and C is v14 `Testing/PeerC`. A and B trust each other;
+B and C have separate direct credentials. The test checks real HTTPS responses:
+
+- Directly granted page resolution succeeds and returns the correct site URL and environment.
+- A cannot reach C through B's trust, and C cannot reach A.
+- Tokens cannot impersonate another peer or cross capability boundaries.
+- C's valid resolver token on B grants no site access when its site list is empty.
+- Usage capability requests reject incorrect environment identities and pairing generations.
+- Revoking A on B leaves C's independently configured channel operational.
+
+Run just this check with `--filter testThreePeersRequireDirectSiteAndEnvironmentGrants`.
+The harness verifies separate encryption keys and refuses occupied fixture
+configurations. Temporary grants and pages are restored in `finally`, including
+after an assertion fails. These real peers are separate from the simulated
+capacity workloads below; passing this check does not establish the load targets
+in [issue #7](https://github.com/42lizard/typo3totypo3/issues/7).
 
 Do not run this concurrently with the integration suite: both use `db_testing`.
 Fixture backups remain in `var/exchange-testing/paired-fixture-backup.json` if the
@@ -117,6 +143,11 @@ process crashes. Recover each affected context before rerunning:
 cd dev/typo3-v13 # repeat for v14
 printf '%s' '{"operation":"cleanup"}' | ddev exec env TYPO3_CONTEXT=Testing TYPO3_PATH_APP=/var/www/html/var/exchange-testing TYPO3_PATH_ROOT=/var/www/html/public php /opt/typo3-to-typo3/Tests/Paired/fixture.php
 ```
+
+For C, run the same recovery command from `dev/typo3-v14` with
+`TYPO3_CONTEXT=Testing/PeerC` and
+`TYPO3_PATH_APP=/var/www/html/var/exchange-testing-c`. Its backup lives in
+`var/exchange-testing-c/paired-fixture-backup.json`.
 
 ## Opt-in capacity tests
 

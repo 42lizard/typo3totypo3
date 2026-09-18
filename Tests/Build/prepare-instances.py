@@ -10,9 +10,9 @@ import uuid
 root = Path(__file__).resolve().parents[2]
 versions = (13, 14)
 paths = {}
-for version in versions:
+for version, app in ((13, 'exchange-testing'), (14, 'exchange-testing'), (14, 'exchange-testing-c')):
     project = root / 'dev' / f'typo3-v{version}'
-    target = project / 'var' / 'exchange-testing'
+    target = project / 'var' / app
     target.mkdir(parents=True, exist_ok=True)
     for name in ('vendor', 'composer.json', 'composer.lock', 'public'):
         link = target / name
@@ -26,7 +26,8 @@ for version in versions:
     site.parent.mkdir(parents=True, exist_ok=True)
     if not site.exists():
         site.write_text((project / 'config' / 'sites' / 'main' / 'config.yaml').read_text())
-    paths[version] = target / '.peer-config.json'
+    if app == 'exchange-testing':
+        paths[version] = target / '.peer-config.json'
 if not any(p.exists() for p in paths.values()):
     identities = {v: str(uuid.uuid4()) for v in versions}
     tokens = {v: secrets.token_hex(32) for v in versions}
