@@ -14,6 +14,5 @@ use_dns_when_possible: true
 composer_version: "2"
 web_environment:
     - TYPO3_CONTEXT=Development
-    - TYPO3_EXCHANGE_CONFIG=/var/www/html/.peer-config.json
 nodejs_version: "24"
 corepack_enable: false

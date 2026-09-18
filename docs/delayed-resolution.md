@@ -19,7 +19,9 @@ ddev typo3 exchange:retry --list --limit=100
 ```
 
 Schedule the production command once per minute, as the TYPO3 application's
-operating-system user, with its usual environment and `TYPO3_EXCHANGE_CONFIG`:
+operating-system user, with the same application context and TYPO3 configuration
+as the backend. `TYPO3_EXCHANGE_CONFIG` is only needed for legacy file-based
+connections before migration:
 
 ```cron
 * * * * * cd /path/to/typo3 && vendor/bin/typo3 exchange:retry --limit=10

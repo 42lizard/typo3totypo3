@@ -22,12 +22,11 @@ Each result includes `status`, a reference containing the logical instance UUID,
 page UUID and selected language ID, the current readable URL, and the site identifier.
 Commands return a nonzero exit code for unresolved URLs and connection failures.
 
-For a fresh checkout, run `bash dev/setup.sh`, then explicitly pair the local
-instances with `python3 dev/pair.py`. Pairing generates separate random tokens per
-direction, stores only token hashes for incoming grants, and writes secrets to
-Git-ignored files with owner-only permissions. It refuses to overwrite existing
-configuration. Restart both DDEV projects after changing their environment
-configuration; changes to the JSON peer configuration take effect on the next request.
+For a fresh checkout, run `bash dev/setup.sh`, then pair the local instances
+through [backend connection management](connections.md#pair-two-instances).
+The Development projects use the encrypted database configuration and do not need
+`TYPO3_EXCHANGE_CONFIG`. Restart DDEV after removing a previously configured
+environment variable.
 
 ## Legacy file configuration
 
@@ -35,10 +34,13 @@ New installations use [backend connection management](connections.md). Existing
 files can be imported once from **System → Instance connections**. The format
 below documents legacy compatibility and migration.
 
-Set `TYPO3_EXCHANGE_CONFIG` to an absolute path to a protected JSON file outside
-the document root. Without an enabled file, resolution is disabled. The DDEV
-projects use `/var/www/html/.peer-config.json` inside each container. Production,
-staging and development must have separate credentials and endpoint mappings.
+For legacy compatibility or a one-time import, set `TYPO3_EXCHANGE_CONFIG` to an
+absolute path to a protected JSON file outside the document root. The legacy
+`python3 dev/pair.py` helper generates `.peer-config.json` files; using those files
+requires explicitly setting the variable until import is complete. Resolution
+requires enabled backend configuration or, before initialization, an enabled
+legacy file. Production, staging and development must have separate credentials
+and endpoint mappings.
 Do not distribute these files through content database exports or source control.
 
 Configuration structure (placeholders must be replaced):
