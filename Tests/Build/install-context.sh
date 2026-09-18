@@ -8,7 +8,7 @@ if [[ ! -f config/system/settings.php ]]; then
     fi
     export TYPO3_SETUP_ADMIN_PASSWORD
     TYPO3_SETUP_ADMIN_PASSWORD="Test!$(cat .local-credentials)"
-    vendor/bin/typo3 setup --no-interaction \
+    bash /opt/typo3-to-typo3/dev/setup-with-site-config.sh --no-interaction \
         --driver=mysqli --host=db --port=3306 --dbname=db_testing \
         --username=db --password=db --server-type=other \
         --admin-username=testing-admin --admin-email=testing@example.test \

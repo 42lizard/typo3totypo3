@@ -7,11 +7,15 @@ namespace Lizard\Typo3ToTypo3\Tests\Functional;
 use Lizard\Typo3ToTypo3\Backend\ConnectionsController;
 use Lizard\Typo3ToTypo3\Configuration\ConnectionStore;
 use Lizard\Typo3ToTypo3\PeerConfiguration;
+use Masterminds\HTML5;
 use PHPUnit\Framework\Attributes\Test;
+use TYPO3\CMS\Backend\Http\RequestHandler;
 use TYPO3\CMS\Backend\Routing\Route;
+use TYPO3\CMS\Backend\Routing\Router;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\FormProtection\FormProtectionFactory;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -214,7 +218,7 @@ final class ConnectionsTest extends FunctionalTestCase
         self::assertStringNotContainsString($token, (string)$controller->handleRequest($this->request())->getBody());
         $remote = PeerConfiguration::uuid();
         $response = $controller->handleRequest($this->request('POST', ['action' => 'incoming', 'instance' => $remote,
-            'token' => $token, 'sites' => 'main', 'rate' => '120', 'enabled' => '1']));
+            'peerToken' => $token, 'sites' => 'main', 'rate' => '120', 'enabled' => '1']));
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(hash('sha256', $token), $store->read()['config']['incoming'][$remote]['tokenHash']);
         self::assertStringNotContainsString($token, (string)$response->getBody());
@@ -222,6 +226,91 @@ final class ConnectionsTest extends FunctionalTestCase
         $GLOBALS['BE_USER']->user['lang'] = 'de';
         $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('de');
         self::assertStringContainsString('Instanzverbindungen', (string)$controller->handleRequest($this->request())->getBody());
+    }
+
+    #[Test]
+    public function renderedConnectionFormsSubmitThroughBackendRouting(): void
+    {
+        $store = $this->get(ConnectionStore::class);
+        $store->import();
+        $handler = $this->get(RequestHandler::class);
+        $newOutgoing = "//form[input[@name='action' and @value='outgoing']][last()]";
+        $request = $this->connectionFormRequest($newOutgoing, ['name' => 'second',
+            'instance' => PeerConfiguration::uuid(), 'endpoint' => 'https://second.example/typo3-exchange/v1/resolve',
+            'origins' => 'https://second.example']);
+        $response = $handler->handle($request);
+        self::assertSame(200, $response->getStatusCode(), 'Saving a rendered form must not redirect to login.');
+        $token = $store->read()['config']['outgoing']['second']['token'];
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/D', $token);
+        self::assertStringContainsString($token, (string)$response->getBody());
+        $outgoing = "//form[input[@name='action' and @value='outgoing'] and input[@name='name' and @value='second']]";
+        $response = $handler->handle($this->connectionFormRequest($outgoing));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame($token, $store->read()['config']['outgoing']['second']['token']);
+        self::assertStringNotContainsString($token, (string)$response->getBody());
+
+        $replacement = str_repeat('b', 64);
+        $response = $handler->handle($this->connectionFormRequest($outgoing, [], $replacement));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame($replacement, $store->read()['config']['outgoing']['second']['token']);
+        self::assertStringNotContainsString($replacement, (string)$response->getBody());
+        $response = $handler->handle($this->connectionFormRequest($outgoing, ['rotate' => '1']));
+        self::assertSame(200, $response->getStatusCode());
+        $rotated = $store->read()['config']['outgoing']['second']['token'];
+        self::assertNotSame($replacement, $rotated);
+        self::assertMatchesRegularExpression('/^[a-f0-9]{64}$/D', $rotated);
+        self::assertStringContainsString($rotated, (string)$response->getBody());
+
+        $remote = PeerConfiguration::uuid();
+        $incoming = "//form[input[@name='action' and @value='incoming']][last()]";
+        $response = $handler->handle($this->connectionFormRequest($incoming, [
+            'instance' => $remote, 'sites' => 'main', 'rate' => '120',
+        ], $rotated));
+        self::assertSame(200, $response->getStatusCode());
+        $hash = $store->read()['config']['incoming'][$remote]['tokenHash'];
+        self::assertSame(hash('sha256', $rotated), $hash);
+        self::assertStringNotContainsString($rotated, (string)$response->getBody());
+        self::assertStringNotContainsString($hash, (string)$response->getBody());
+
+        $incoming = "//form[input[@name='action' and @value='incoming'] and input[@name='instance' and @value='$remote']]";
+        $response = $handler->handle($this->connectionFormRequest($incoming));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame($hash, $store->read()['config']['incoming'][$remote]['tokenHash']);
+        $response = $handler->handle($this->connectionFormRequest($incoming, [], $replacement));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(hash('sha256', $replacement), $store->read()['config']['incoming'][$remote]['tokenHash']);
+
+        $state = $store->read();
+        self::assertSame(403, $handler->handle($this->connectionFormRequest($outgoing, ['csrf' => 'forged']))->getStatusCode());
+        $request = $this->connectionFormRequest($outgoing)->withQueryParams(['token' => 'forged']);
+        self::assertSame(302, $handler->handle($request)->getStatusCode());
+        self::assertSame(302, $handler->handle($request->withQueryParams([]))->getStatusCode());
+        self::assertSame($state, $store->read());
+    }
+
+    private function connectionFormRequest(string $selector, array $values = [], string $credential = ''): ServerRequest
+    {
+        $response = $this->get(ConnectionsController::class)->handleRequest($this->request());
+        $document = (new HTML5(['disable_html_ns' => true]))->loadHTML((string)$response->getBody());
+        $xpath = new \DOMXPath($document);
+        $form = $xpath->query($selector)->item(0);
+        self::assertInstanceOf(\DOMElement::class, $form);
+        $body = [];
+        foreach ($xpath->query('.//input[@name] | .//textarea[@name]', $form) as $field) {
+            if ($field->getAttribute('type') === 'checkbox' && !$field->hasAttribute('checked')) {
+                continue;
+            }
+            $body[$field->getAttribute('name')] = match ($field->getAttribute('type')) {
+                'password' => $credential,
+                default => $field->tagName === 'textarea' ? $field->textContent : $field->getAttribute('value'),
+            };
+        }
+        $uri = new Uri('https://typo3-testing.local' . $form->getAttribute('action'));
+        parse_str($uri->getQuery(), $query);
+        $request = $this->request()->withMethod('POST')->withUri($uri)
+            ->withHeader('Referer', (string)$uri)->withHeader('Sec-Fetch-Dest', 'iframe')
+            ->withQueryParams($query)->withParsedBody(array_replace($body, $values));
+        return $request->withAttribute('route', $this->get(Router::class)->matchResult($request)->getRoute());
     }
 
     #[Test]
@@ -233,7 +322,7 @@ final class ConnectionsTest extends FunctionalTestCase
         foreach (['http://peer.example/typo3-exchange/v1/resolve', 'https://peer.example/redirect', 'https://user:pass@peer.example/typo3-exchange/v1/resolve'] as $endpoint) {
             $response = $controller->handleRequest($this->request('POST', ['action' => 'outgoing', 'name' => 'peer',
                 'instance' => $this->config['outgoing']['peer']['instance'], 'endpoint' => $endpoint,
-                'origins' => 'https://peer.example', 'token' => str_repeat('c', 64), 'enabled' => '1']));
+                'origins' => 'https://peer.example', 'peerToken' => str_repeat('c', 64), 'enabled' => '1']));
             self::assertSame(400, $response->getStatusCode());
             self::assertStringNotContainsString(str_repeat('c', 64), (string)$response->getBody());
         }
