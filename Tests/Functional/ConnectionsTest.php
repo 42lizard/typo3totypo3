@@ -346,13 +346,21 @@ final class ConnectionsTest extends FunctionalTestCase
                 'instance' => PeerConfiguration::uuid(), 'environment' => PeerConfiguration::uuid(),
                 'generation' => PeerConfiguration::uuid(), 'capability' => 'usage',
                 'endpoint' => 'https://peer.example/typo3-exchange/v2'];
-            $response = $controller->handleRequest($this->request('POST', $body));
+            $handler = $this->get(RequestHandler::class);
+            $outgoing = "//form[input[@name='action' and @value='capability'] and input[@name='direction' and @value='outgoing']][last()]";
+            $response = $handler->handle($this->connectionFormRequest($outgoing, $body));
             self::assertSame(200, $response->getStatusCode());
             $channel = $store->read()['config']['exchange']['outgoing']['stagingUsage'];
             self::assertFalse($channel['enabled']);
             self::assertStringContainsString($channel['token'], (string)$response->getBody());
             self::assertStringNotContainsString($channel['token'], (string)$controller->handleRequest($this->request())->getBody());
             self::assertSame([], $store->read()['config']['exchange']['incoming']);
+            $incoming = "//form[input[@name='action' and @value='capability'] and input[@name='direction' and @value='incoming']][last()]";
+            $response = $handler->handle($this->connectionFormRequest($incoming,
+                array_replace($body, ['direction' => 'incoming', 'name' => 'consumerUsage', 'sites' => 'main']), $channel['token']));
+            self::assertSame(200, $response->getStatusCode());
+            self::assertSame(hash('sha256', $channel['token']), $store->read()['config']['exchange']['incoming']['consumerUsage']['tokenHash']);
+            self::assertStringNotContainsString($channel['token'], (string)$response->getBody());
             self::assertStringContainsString('Usage and notifications', (string)$response->getBody());
             $GLOBALS['BE_USER']->user['lang'] = 'de';
             $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('de');

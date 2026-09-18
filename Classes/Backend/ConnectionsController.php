@@ -134,7 +134,7 @@ final class ConnectionsController
                                 'instance' => self::input($body, 'instance'), 'environment' => self::input($body, 'environment'),
                                 'generation' => self::input($body, 'generation'), 'capability' => self::input($body, 'capability'),
                                 'sites' => self::lines(self::input($body, 'sites'))];
-                            $secret = self::input($body, 'token');
+                            $secret = self::input($body, 'peerToken');
                             if ($secret !== '' && !preg_match('/^[a-f0-9]{64}$/D', $secret)) {
                                 throw new \InvalidArgumentException('Invalid capability credential.');
                             }
