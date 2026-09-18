@@ -72,6 +72,8 @@ final class SimulatedConsumer
         $this->inbox->accept(hash('sha256', 'performance-serving-pair'), $items);
     }
 
+    public function disconnect(): void { $this->db->close(); }
+
     public function primeCache(): void
     {
         foreach ($this->references as $reference) {

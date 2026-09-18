@@ -106,7 +106,9 @@ final class DestinationChanges
         $state = $db->select(['*'], 'tx_typo3totypo3_recheck', ['uid' => 1])->fetchAssociative();
         if (!$state || (int)$state['requested'] === (int)$state['processed']) { return; }
         $db->transactional(function () use ($db, $state): void {
-            $db->executeStatement('UPDATE ' . self::TABLE . ' SET checked_at = 0');
+            // Preserve oldest-first progress when more global hints arrive during a pass.
+            $due = time() - 181;
+            $db->executeStatement('UPDATE ' . self::TABLE . ' SET checked_at = CASE WHEN checked_at > ? THEN ? ELSE checked_at END', [$due, $due]);
             $db->update('tx_typo3totypo3_recheck', ['processed' => $state['requested']], ['uid' => 1]);
         });
     }

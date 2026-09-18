@@ -15,6 +15,24 @@ final class DestinationChangesTest extends FunctionalTestCase
 {
     protected array $testExtensionsToLoad = ['42lizard/typo3-to-typo3'];
 
+    public function testRepeatedGlobalRechecksPreserveOldestFirstProgress(): void
+    {
+        $db = $this->get(\TYPO3\CMS\Core\Database\ConnectionPool::class)->getConnectionForTable('tx_typo3totypo3_observation');
+        $old = PeerConfiguration::uuid();
+        $recent = PeerConfiguration::uuid();
+        foreach ([$old => time() - 500, $recent => time()] as $page => $checked) {
+            $db->insert('tx_typo3totypo3_observation', ['usage_scope' => hash('sha256', 'usage'), 'notification_scope' => hash('sha256', 'notify'),
+                'page_uuid' => $page, 'checked_at' => $checked]);
+        }
+        $changes = $this->get(DestinationChanges::class);
+        $changes->requestRecheck();
+        $changes->processRechecks();
+        $older = (int)$db->select(['checked_at'], 'tx_typo3totypo3_observation', ['page_uuid' => $old])->fetchOne();
+        $newer = (int)$db->select(['checked_at'], 'tx_typo3totypo3_observation', ['page_uuid' => $recent])->fetchOne();
+        self::assertLessThan($newer, $older, 'Repeated routing/publication hints must not restart the scan at the first UUID.');
+        self::assertLessThanOrEqual(time() - 180, $newer);
+    }
+
     public function testAncestorHintsPrioritizeDescendantsAndDraftTranslationsMapToLivePage(): void
     {
         $db = $this->get(\TYPO3\CMS\Core\Database\ConnectionPool::class)->getConnectionForTable('pages');

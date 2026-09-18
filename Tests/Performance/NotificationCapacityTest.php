@@ -110,6 +110,9 @@ final class NotificationCapacityTest extends FunctionalTestCase
                 } while ($accepted < $expected);
                 self::assertSame($expected, $accepted);
                 self::assertSame(0, (int)$db->count('*', 'tx_typo3totypo3_delivery', []));
+                // Fork with no inherited native database handles; each child reconnects lazily.
+                foreach ($consumers as $consumer) { $consumer->disconnect(); }
+                $db->close();
                 $children = [];
                 foreach ($consumers as $host => $consumer) {
                     $file = $this->getInstancePath() . '/refresh-' . $host . '.json';

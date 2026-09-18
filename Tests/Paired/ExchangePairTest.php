@@ -91,7 +91,12 @@ final class ExchangePairTest extends TestCase
             self::assertSame(0, $this->fixture(13, ['operation' => 'sync'])['failed']);
             self::assertSame(0, $this->fixture(14, ['operation' => 'usage'])['present']);
         } finally {
-            foreach (array_reverse($started) as $version) { $this->fixture($version, ['operation' => 'cleanup']); }
+            $errors = [];
+            foreach (array_reverse($started) as $version) {
+                try { $this->fixture($version, ['operation' => 'cleanup']); }
+                catch (\Throwable $error) { $errors[] = $error; }
+            }
+            if ($errors) { throw $errors[0]; }
         }
     }
 }
