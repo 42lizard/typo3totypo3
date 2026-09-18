@@ -178,9 +178,39 @@ transmission and verified snapshot-completion work took **53 invocations,
 565.46 seconds processing, 3,125.34 seconds (52m 5s) on a once-per-minute schedule**.
 Notification load and functional tests were running concurrently on the same VM.
 
-The complete v13/v14 suite and exact-baseline rollback checks pass. Full ten-peer
-normal/burst/outage and missed-event timings are still being verified; they are
-not yet claimed proven. The remaining targets are defined in
+On each supported TYPO3 version, the complete suite passed 58 functional tests
+(770 assertions) and seven HTTPS integration tests (255 assertions). The paired
+cross-version lifecycle and exact-baseline rollback test passed 57 assertions.
+Both standards and specification reviews are complete.
+
+The notification workload on TYPO3 14.3.7 uses 10,000 destinations and ten
+isolated consumer databases: 100,000 consumer/destination relationships. One
+serving worker delivers notices; ten forked consumer workers verify resolution
+and tagged page-cache invalidation concurrently. Transport is simulated with
+100 ms latency per request. Each consumer database is approximately 6.5 MiB.
+The complete run passed 179 assertions in 44m 49s of wall time, with 340 MiB
+reported PHP peak memory in the parent process. The measured maxima are:
+
+| Scenario | Maximum scheduled completion | Target |
+| --- | --- | --- |
+| Initial registration baseline | 1,169.43 s (19m 29s) | 30 minutes |
+| Missed event, full serving scan | 706.13 s (11m 46s) | 24 hours |
+| Normal change affecting ten consumers | 107.55 s (1m 48s) | 5 minutes |
+| Burst affecting all 100,000 relationships | 1,021.92 s (17m 2s) | 30 minutes |
+| Recovery after a modeled 24-hour outage | 1,017.67 s (16m 58s) | 30 minutes |
+
+Invocations are placed on a once-per-minute schedule using measured execution
+durations, including overruns. The first serving invocation starts immediately;
+allow up to another minute for initial scheduler alignment. All completed cases
+remain within their targets with that additional delay. Consumer timing includes
+a full minute of refresh scheduler alignment after notification delivery.
+
+The outage scenario advances durable retry timestamps to model 24 hours offline.
+It verifies that delivery cannot bypass remaining hourly backoff, then measures
+recovery from the first eligible successful retry. Up to 3,600 seconds of remaining
+backoff is separate from the recovery figure. All phases completed without failed
+delivery batches or refresh errors. Simulated transport does not establish real
+ten-machine HTTPS throughput or trust isolation. Targets are defined in
 [the capacity decision](https://github.com/42lizard/typo3totypo3/issues/15).
 Real three-instance trust validation is tracked separately in
 [issue #7](https://github.com/42lizard/typo3totypo3/issues/7). See
