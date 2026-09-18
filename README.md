@@ -92,4 +92,4 @@ Manage peers under **System → Instance connections**; see [pairing and migrati
 
 ## License
 
-GPL-2.0-or-later; see [LICENSE](LICENSE).
+GPL-2.0-only; see [LICENSE](LICENSE).

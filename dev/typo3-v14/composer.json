@@ -1,7 +1,7 @@
 {
     "name": "42lizard/typo3-to-typo3-dev-v14",
     "description": "TYPO3 14 development instance for typo3-to-typo3",
-    "license": "GPL-2.0-or-later",
+    "license": "GPL-2.0-only",
     "type": "project",
     "config": {
         "allow-plugins": {

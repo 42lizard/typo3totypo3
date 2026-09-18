@@ -38,4 +38,4 @@ versions, reproduction steps, and expected versus actual behavior. Remove
 credentials, tokens, encryption keys, and private content from reports.
 
 The extension is licensed under
-[GPL-2.0-or-later](https://github.com/42lizard/typo3totypo3/blob/main/LICENSE).
+[GPL-2.0-only](https://github.com/42lizard/typo3totypo3/blob/main/LICENSE).

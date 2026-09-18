@@ -42,7 +42,7 @@
                 }
             },
             "license": [
-                "GPL-2.0-or-later"
+                "GPL-2.0-only"
             ],
             "description": "Data exchange and maintainable links between TYPO3 instances",
             "transport-options": {
