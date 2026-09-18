@@ -81,7 +81,7 @@ final class ConnectionsController
                             break;
                         case 'outgoing':
                             $name = self::input($body, 'name');
-                            $secret = self::input($body, 'token');
+                            $secret = self::input($body, 'peerToken');
                             if ($secret === '' && self::input($body, 'rotate') !== '1') {
                                 $secret = $config['outgoing'][$name]['token'] ?? '';
                             }
@@ -92,7 +92,7 @@ final class ConnectionsController
                             break;
                         case 'incoming':
                             $instance = self::input($body, 'instance');
-                            $secret = self::input($body, 'token');
+                            $secret = self::input($body, 'peerToken');
                             if ($secret !== '' && !preg_match('/^[a-f0-9]{64}$/D', $secret)) { throw new \InvalidArgumentException('Invalid token.'); }
                             $config['incoming'][$instance] = ['enabled' => self::input($body, 'enabled') === '1',
                                 'tokenHash' => $secret === '' ? ($config['incoming'][$instance]['tokenHash'] ?? '') : hash('sha256', $secret),
