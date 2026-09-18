@@ -8,6 +8,11 @@ availability status.
 This is opt-in. Existing resolver connections and periodic destination refresh
 continue to work without enabling usage reporting or notifications.
 
+![Usage and notifications section with the Initialize this exchange environment button](images/exchange-initialize-v14.png)
+
+*TYPO3 14: initialize the deployment identity before adding usage or notification
+capabilities. Initialization alone does not grant access to another instance.*
+
 ## Configure both directions
 
 For a consumer **A** linking to a serving instance **B**:
@@ -39,6 +44,21 @@ Use descriptive local connection names, including the environment, such as
 `customer-portal-production`. This name appears in the serving instance's usage
 view. Stored credentials are encrypted with the existing TYPO3 connection store;
 incoming credentials are stored as hashes. Saved credentials are never displayed.
+
+![Initialized environment and outgoing capability form with remote identities, pairing generation and HTTPS endpoint](images/exchange-outgoing-v14.png)
+
+*Outgoing capability: select **Usage reporting** or **Change notifications**,
+enter the receiving instance and environment UUIDs, and use its `/typo3-exchange/v2`
+endpoint. Copy this pairing generation and the generated token to its matching
+incoming grant. New capabilities start disabled.*
+
+![Incoming capability grant form with remote identities, pairing generation, site restrictions and token field](images/exchange-incoming-v14.png)
+
+*Incoming capability grant: enter the sending instance and environment UUIDs,
+then copy the sender's pairing generation and token. For usage reporting, list
+the permitted site identifiers; an empty list permits no registrations. Usage
+reporting and change notifications require separate capabilities and grants.
+These screenshots show empty forms, with no credentials or grants saved.*
 
 ## Schedule background work
 

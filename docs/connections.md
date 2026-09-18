@@ -5,6 +5,10 @@ available on TYPO3 13 and 14. It manages local identity, outgoing connections,
 incoming grants and public-origin aliases. Editors cannot access it or invoke
 its actions directly. All writes and connection tests require a valid form token.
 
+For the **Usage and notifications** configuration, including environment
+initialization and capability-form screenshots, see
+[report usage and notify consumers](usage-notifications.md).
+
 ![TYPO3 14 Instance connections showing the local identity and a successful connection test](images/connections-v14.jpg)
 
 *TYPO3 14.3.7 development instance, English interface in dark mode. The connection
