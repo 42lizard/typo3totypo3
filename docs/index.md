@@ -10,8 +10,9 @@ after page renames, moves, or configured domain changes.
 
 ## Beta status
 
-The extension is ready for beta testing on TYPO3 13.4 and 14.3 with PHP 8.2 or
-newer. Start with staging sites or disposable installations. Production scheduling,
+[v0.1.0-beta.1](https://github.com/42lizard/typo3totypo3/releases/tag/v0.1.0-beta.1)
+is the first beta for TYPO3 13.4 and 14.3 with PHP 8.2 or newer.
+Start with staging sites or disposable installations. Production scheduling,
 external-cache integration, and the ten-peer/10,000-reference throughput target
 still require deployment-specific validation.
 

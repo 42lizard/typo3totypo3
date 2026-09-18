@@ -7,16 +7,20 @@ From the TYPO3 project's root directory:
 
 ```bash
 composer config repositories.typo3-to-typo3 vcs https://github.com/42lizard/typo3totypo3
-composer require 42lizard/typo3-to-typo3:dev-main --prefer-dist
+composer require 42lizard/typo3-to-typo3:0.1.0-beta.1 --prefer-dist
 vendor/bin/typo3 extension:setup
 vendor/bin/typo3 cache:flush
 ```
 
-There are currently no release tags. `dev-main` explicitly allows the development
-branch for this package without lowering the project's global minimum stability.
+The explicit beta version installs this release without lowering the project's
+global minimum stability. See the [release notes](https://github.com/42lizard/typo3totypo3/releases/tag/v0.1.0-beta.1)
+for the supported features and known limitations.
 Commit the resulting `composer.json` and `composer.lock` to keep deployments on
 the resolved commit. The Composer package name is `42lizard/typo3-to-typo3`; the
 TYPO3 extension key is `typo3_to_typo3`.
+
+For development snapshots, use `dev-main` instead of `0.1.0-beta.1`. That tracks
+unreleased work; use the tagged beta when reporting release-specific problems.
 
 Next, [connect the instances](connections.md) and
 [schedule the retry and refresh jobs](operations.md#schedule-both-jobs).
