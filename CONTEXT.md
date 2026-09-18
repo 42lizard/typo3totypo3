@@ -48,3 +48,31 @@ linked, including a missing page, unavailable translation, or loss of public acc
 Previously verified destination information whose freshness could not be confirmed
 because of a temporary communication failure. Staleness does not establish that
 the destination is unavailable.
+
+**Consuming instance**:
+An instance whose content contains a cross-instance link to a destination page
+in another instance.
+
+**Serving instance**:
+The instance that owns the destination page of a cross-instance link.
+
+**Usage registration**:
+A consuming instance's declaration that it uses a destination page in a selected
+language. It identifies the consuming instance, not its source records or drafts.
+
+**Change notification**:
+A serving instance's notice that a used destination may have changed and needs
+checking. It is not itself verified destination data.
+
+**Stale usage**:
+A previously reported usage whose continued existence has not recently been
+confirmed. It does not establish that the consuming instance removed its links.
+
+**Exchange environment identity**:
+The identity of one participating environment of a logical instance. It separates
+that environment's usage declarations and notifications from those of other environments.
+
+**Pairing generation**:
+A particular agreed lifetime of a connection between participating environments.
+A reset starts a new generation; messages from an earlier generation no longer belong
+to the active pairing.
