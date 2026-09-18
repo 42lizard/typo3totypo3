@@ -37,3 +37,5 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
       - name: Run isolated PHPUnit tests
         run: TYPO3_PATH_ROOT="$PWD/public" vendor/bin/phpunit -c ../../Tests/Functional/phpunit.xml
+      - name: Verify setup preserves site configuration
+        run: bash ../../Tests/Build/check-site-preservation.sh
