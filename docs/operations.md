@@ -83,6 +83,9 @@ lease recovery, page-cache invalidation, and English/German rendering. Failure
 and timing cases use controlled transport responses; these are reproducible
 behavior tests, not measurements of a production network outage.
 
-The ten-peer/10,000-reference throughput target and an actual production scheduler
-and external-cache deployment still require deployment-specific validation. The
-local test result does not establish those performance or operational guarantees.
+The [acceptance evidence](acceptance.md) records the 100-link save measurements,
+10-peer/10,000-destination polling workload and full scenario matrix. The local
+polling workload meets five-minute freshness on both supported versions. Actual
+production scheduling, peer latency, hardware capacity and external caches still
+require deployment-specific validation; repeat the workload with representative
+conditions before relying on that bound.

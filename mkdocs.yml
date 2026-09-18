@@ -22,6 +22,7 @@ nav:
       - Usage and notifications: usage-notifications.md
   - Development:
       - Tests: testing.md
+      - Acceptance evidence: acceptance.md
       - Documentation site: documentation.md
       - Peer resolver API: peer-resolution.md
       - Design: cross-instance-links.md

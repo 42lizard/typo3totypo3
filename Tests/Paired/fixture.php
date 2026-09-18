@@ -51,6 +51,31 @@ $change = static function (array $data) use ($container): DataHandler {
 };
 $result = [];
 switch ($input['operation']) {
+    case 'export-connections':
+        if (!$backup) { throw new RuntimeException('Missing test fixture.'); }
+        $result = ['rows' => $db->select(['*'], ConnectionStore::TABLE, [])->fetchAllAssociative()];
+        break;
+    case 'database-clone':
+        if (!$backup) { throw new RuntimeException('Missing test fixture.'); }
+        $db->executeStatement('DELETE FROM ' . ConnectionStore::TABLE);
+        foreach ($input['rows'] as $row) { $db->insert(ConnectionStore::TABLE, $row); }
+        $network = new ArrayObject(['calls' => 0]);
+        $GLOBALS['TYPO3_CONF_VARS']['HTTP']['handler'] = ['clone-guard' => static fn($next) => static function () use ($network) {
+            ++$network['calls'];
+            throw new RuntimeException('A database clone must not attempt HTTP.');
+        }];
+        $blocked = 0;
+        foreach ([
+            static fn() => (new \Lizard\Typo3ToTypo3\PeerConfiguration())->load(),
+            static fn() => (new \Lizard\Typo3ToTypo3\PeerClient(new \Lizard\Typo3ToTypo3\PeerConfiguration(),
+                GeneralUtility::makeInstance(\TYPO3\CMS\Core\Http\RequestFactory::class)))->resolve('peer', [$input['url']]),
+            static fn() => $container->get(RefreshWorker::class)->run(),
+        ] as $attempt) {
+            try { $attempt(); } catch (RuntimeException) { ++$blocked; }
+        }
+        $result = ['copied' => $store->hasConfiguration(), 'activeRevision' => $store->read()['revision'],
+            'blocked' => $blocked, 'networkCalls' => $network['calls']];
+        break;
     case 'ready':
         if ($backup !== null || $store->hasConfiguration()) { throw new RuntimeException('Testing configuration is occupied; recover the previous fixture first.'); }
         $result = ['database' => $db->getDatabase(), 'context' => getenv('TYPO3_CONTEXT'),

@@ -345,6 +345,37 @@ final class RetryTest extends TestCase
             $retryNow($liveId);
             self::assertTrue(str_starts_with($value($liveId), 't3://exchange?') && $job($liveId)['workspace_id'] == 0, 'Published content is converted only by its separate live job');
 
+            $untouchedLive = $fixture('https://editor.example/live');
+            $GLOBALS['BE_USER'] = $workspaceUser;
+            try {
+                $fake->status = 503;
+                $versioned = $save([$untouchedLive => ['header_link' => $origin . '/obsolete-draft']]);
+                $fixtures[] = $obsoleteDraft = (int)$versioned->autoVersionIdMap['tt_content'][$untouchedLive];
+            } finally { $GLOBALS['BE_USER'] = $originalUser; }
+            $fake->status = 200;
+            $fake->callback = static function () use ($fake, $save, $obsoleteDraft): void {
+                $fake->callback = null;
+                $save([$obsoleteDraft => ['header_link' => 'https://editor.example/replaced-draft']]);
+            };
+            $retryNow($obsoleteDraft);
+            self::assertSame('https://editor.example/replaced-draft', $value($obsoleteDraft), 'Replacing a draft during lookup wins over the stale result.');
+            self::assertSame('https://editor.example/live', $value($untouchedLive), 'Draft replacement never changes the live record.');
+            $GLOBALS['BE_USER'] = $workspaceUser;
+            try {
+                $fake->status = 503;
+                $save([$obsoleteDraft => ['header_link' => $origin . '/deleted-draft']]);
+                $delete = GeneralUtility::makeInstance(DataHandler::class);
+                $delete->start([], ['tt_content' => [$obsoleteDraft => ['delete' => 1]]]);
+                $delete->process_cmdmap();
+                self::assertSame([], $delete->errorLog);
+            } finally { $GLOBALS['BE_USER'] = $originalUser; }
+            $fake->status = 200;
+            $calls = $fake->calls;
+            $retryNow($obsoleteDraft);
+            self::assertSame($calls, $fake->calls, 'Deleting the draft invalidates its lookup before networking.');
+            self::assertSame('https://editor.example/live', $value($untouchedLive));
+            self::assertSame(0, (int)$db->select(['deleted'], 'tt_content', ['uid' => $untouchedLive])->fetchOne(), 'A retry never publishes a workspace deletion.');
+
         } finally {
             $cleanup();
         }

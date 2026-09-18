@@ -114,6 +114,14 @@ final class ExchangePairTest extends TestCase
             self::assertSame(403, $resolve('a', 'b', $tokens['ab'])['status']);
             self::assertSame(403, $capabilities('ab')['status']);
             self::assertSame(200, $capabilities('cb')['status']);
+            // Copy only encrypted database configuration, without A's key or application context.
+            $configs['a']['outgoing']['peer'] = ['enabled' => true, 'instance' => $configs['b']['instance'],
+                'origins' => [$origins['b']], 'endpoint' => $origins['b'] . '/typo3-exchange/v1/resolve', 'token' => $tokens['ab']];
+            $this->fixture(13, ['operation' => 'configure', 'config' => $configs['a']]);
+            $copy = $this->fixture(13, ['operation' => 'export-connections']);
+            self::assertNotEmpty($copy['rows']);
+            self::assertSame(['copied' => true, 'activeRevision' => '', 'blocked' => 3, 'networkCalls' => 0],
+                $this->fixture('c', ['operation' => 'database-clone', 'rows' => $copy['rows'], 'url' => $origins['b'] . '/paired-exchange']));
         } finally {
             $errors = [];
             foreach (array_reverse($started) as $version) {

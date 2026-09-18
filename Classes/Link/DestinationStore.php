@@ -11,6 +11,8 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 final class DestinationStore
 {
     public const TABLE = 'tx_typo3totypo3_destination';
+    // Leave room for minute-aligned scheduling and two bounded refresh runs at the accepted load.
+    private const REFRESH_INTERVAL = 120;
 
     public function __construct(private readonly ConnectionPool $connections, private readonly CacheManager $cache) {}
 
@@ -46,7 +48,7 @@ final class DestinationStore
             'language_id' => $reference['language'], 'status' => $status,
             'url' => $url ?? $previous['url'] ?? '', 'checked_at' => time(),
             'generation' => bin2hex(random_bytes(16)), 'lease_token' => '', 'lease_until' => 0,
-            'next_refresh' => time() + 180, 'attempts' => 0, 'refresh_paused' => 0, 'refresh_error' => ''];
+            'next_refresh' => time() + self::REFRESH_INTERVAL, 'attempts' => 0, 'refresh_paused' => 0, 'refresh_error' => ''];
         if ($previous === null) {
             try {
                 $connection->insert(self::TABLE, $key + $data);
@@ -100,7 +102,7 @@ final class DestinationStore
         $attempts = $result === null ? min(16, (int)$row['attempts'] + 1) : 0;
         $url = $status === 'resolved' && $result !== null ? $result['url'] : $row['url'];
         $data = ['status' => $status, 'url' => $url, 'checked_at' => time(),
-            'next_refresh' => time() + ($attempts ? min(3600, 60 * (2 ** ($attempts - 1))) : 180),
+            'next_refresh' => time() + ($attempts ? min(3600, 60 * (2 ** ($attempts - 1))) : self::REFRESH_INTERVAL),
             'attempts' => $attempts, 'lease_token' => '', 'lease_until' => 0,
             'peer_hash' => $peerHash, 'refresh_error' => $result === null ? 'transient' : ''];
         $updated = $this->connections->getConnectionForTable(self::TABLE)->update(self::TABLE, $data,

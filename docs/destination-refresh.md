@@ -19,13 +19,14 @@ expire after two minutes and prevent overlapping workers processing the same
 destination. Generation checks prevent late responses overwriting newer saves.
 Configure one outgoing connection per remote instance UUID.
 
-Resolved and explicitly unavailable destinations are checked every three
+Resolved and explicitly unavailable destinations are checked every two
 minutes. With the every-minute schedule, healthy peers and enough capacity to
 process all due records, changes reach TYPO3 output within five minutes.
 Monitor command failures and the destination table's `next_refresh`,
 `refresh_error`, `attempts`, and `checked_at` fields. `checked_at` is the latest
-attempt, including failures. The ten-peer/10,000-reference deployment load gate
-remains part of the final validation ticket; these timings are not a measured
+attempt, including failures. The [10-peer/10,000-destination acceptance workload](acceptance.md#five-minute-polling-freshness)
+measured worst-phase completion below five minutes on both supported versions.
+Repeat those measurements on deployment hardware; the local result is not a
 production throughput guarantee.
 
 ## Failure and recovery

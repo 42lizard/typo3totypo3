@@ -59,6 +59,12 @@ bash Tests/Build/run.sh
 Keep both existing DDEV projects running for the HTTPS integration suite.
 For individual runs, change into `dev/typo3-v13` or `dev/typo3-v14`.
 
+For the same-version HTTPS matrix, run `python3 Tests/Build/run-self-integration.py`
+from the repository root after the normal suites. It temporarily configures self
+grants only in Testing and restores the original peer files. See the
+[acceptance evidence](acceptance.md) for the full scenario matrix, measured
+100-link save budget and 10-peer polling-freshness workload.
+
 ## Isolated functional tests
 
 ```bash
@@ -129,7 +135,8 @@ B and C have separate direct credentials. The test checks real HTTPS responses:
 - Revoking A on B leaves C's independently configured channel operational.
 
 Run just this check with `--filter testThreePeersRequireDirectSiteAndEnvironmentGrants`.
-The harness verifies separate encryption keys and refuses occupied fixture
+The harness also copies encrypted connection rows into C to prove a database-only
+clone cannot activate them or initiate HTTP. It verifies separate encryption keys and refuses occupied fixture
 configurations. Temporary grants and pages are restored in `finally`, including
 after an assertion fails. These real peers are separate from the simulated
 capacity workloads below; passing this check does not establish the load targets
