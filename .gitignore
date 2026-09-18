@@ -11,3 +11,5 @@
 /.phpunit.cache/
 /site/
 /.venv-docs/
+
+/dev/*/config/system/exchange-environment.php

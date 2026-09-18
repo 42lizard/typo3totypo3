@@ -306,6 +306,46 @@ final class LinkReportTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function usageViewIsLocalizedAndForgetRequiresAdminConfirmationAndAnUnchangedStaleReport(): void
+    {
+        $registry = $this->get(\Lizard\Typo3ToTypo3\Exchange\UsageRegistry::class);
+        $scope = hash('sha256', 'backend usage');
+        $registry->rememberScope($scope, ['name' => 'Portal-production', 'instance' => PeerConfiguration::uuid(), 'environment' => PeerConfiguration::uuid()]);
+        $page = (new \Lizard\Typo3ToTypo3\PageIdentity($this->get(ConnectionPool::class)))->forPage(1);
+        $registry->report($scope, [['page' => $page, 'language' => 0, 'revision' => 1, 'present' => true, 'site' => 'main']]);
+        $db = $this->get(ConnectionPool::class)->getConnectionForTable('tx_typo3totypo3_usage');
+        $reported = time() - 172801;
+        $db->update('tx_typo3totypo3_usage', ['reported_at' => $reported], ['scope_key' => $scope]);
+        $controller = $this->get(ReportController::class);
+        $request = $this->request()->withQueryParams(['view' => 'usage', 'id' => '1']);
+        $html = (string)$controller->handleRequest($request)->getBody();
+        self::assertStringContainsString('Used by other instances', $html);
+        self::assertStringContainsString('Portal-production', $html);
+        self::assertStringContainsString('UTC', $html);
+        $editRequest = $this->request()->withQueryParams(['edit' => ['pages' => [1 => 'edit']]]);
+        $GLOBALS['TYPO3_REQUEST'] = $editRequest;
+        $bar = $this->get(\TYPO3\CMS\Backend\Template\ModuleTemplateFactory::class)->create($editRequest)->getDocHeaderComponent()->getButtonBar();
+        $buttons = $bar->getButtons($editRequest);
+        self::assertStringContainsString('view=usage', $buttons['right'][30][0]->getHref());
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('de');
+        self::assertStringContainsString('Von anderen Instanzen verwendet', (string)$controller->handleRequest($request)->getBody());
+        $post = $this->request('POST');
+        $body = ['action' => 'forgetUsage', 'scope' => $scope, 'page' => $page, 'language' => '0', 'reported' => (string)$reported,
+            'confirmed' => '1', 'csrf' => $this->get(FormProtectionFactory::class)->createFromRequest($post)->generateToken('exchange-report')];
+        self::assertSame(403, $controller->handleRequest($post->withParsedBody($body))->getStatusCode());
+        $this->setUpBackendUser(1);
+        $post = $this->request('POST');
+        $body['csrf'] = $this->get(FormProtectionFactory::class)->createFromRequest($post)->generateToken('exchange-report');
+        self::assertSame(403, $controller->handleRequest($post->withParsedBody(array_replace($body, ['confirmed' => '0'])))->getStatusCode());
+        $db->update('tx_typo3totypo3_usage', ['reported_at' => time()], ['scope_key' => $scope]);
+        self::assertSame(403, $controller->handleRequest($post->withParsedBody($body))->getStatusCode(), 'A new report wins over an old confirmation form.');
+        $db->update('tx_typo3totypo3_usage', ['reported_at' => $reported], ['scope_key' => $scope]);
+        self::assertSame(303, $controller->handleRequest($post->withParsedBody($body))->getStatusCode());
+        self::assertSame([], $registry->usages($scope));
+        self::assertSame(1, (int)$db->count('*', 'tx_typo3totypo3_usage_audit', ['scope_key' => $scope, 'actor_uid' => 1]));
+    }
+
+    #[Test]
     public function controllerRejectsForgedActionsAndRequiresModuleAccess(): void
     {
         $uid = $this->fixture();

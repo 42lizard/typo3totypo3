@@ -83,7 +83,7 @@ final class Resolve implements MiddlewareInterface
             foreach ($items as $item) {
                 $results[] = $this->resolver->resolve($item, $byReference, $grant['sites'], $config['instance'], $config['publicAliases'] ?? []);
             }
-            return $this->response(['protocol' => 1, 'instance' => $config['instance'], 'results' => $results]);
+            return $this->response(['protocol' => 1, 'instance' => $config['instance'], 'environment' => \Lizard\Typo3ToTypo3\Exchange\ExchangeConfiguration::deploymentIdentity(), 'results' => $results]);
         } catch (\Throwable $exception) {
             // Do not leak URLs, authorization headers, configuration secrets or exception traces.
             error_log('TYPO3 exchange resolver failed: ' . $exception::class);

@@ -19,6 +19,7 @@ nav:
       - Deploy and operate: operations.md
       - Delayed resolution: delayed-resolution.md
       - Destination refresh: destination-refresh.md
+      - Usage and notifications: usage-notifications.md
   - Development:
       - Tests: testing.md
       - Documentation site: documentation.md

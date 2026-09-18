@@ -1,0 +1,109 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<h2><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.connections" /></h2>
+<p><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.activationHelp" /></p>
+<f:if condition="{exchangeEnvironment}">
+<f:then>
+<p><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.localEnvironment" />: <code>{exchangeEnvironment}</code></p>
+<details class="mb-3"><summary><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.clone" /></summary>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="initializeClone" />
+<p><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.cloneHelp" /></p>
+<label class="d-block"><input type="checkbox" name="confirmed" value="1" required="required" /> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.cloneConfirm" /></label>
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.clone" /></button>
+</form></details>
+<f:if condition="{exchangeActive}">
+<f:then>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="revision" value="{revision}" />
+<button class="btn btn-default" type="submit" name="action" value="recheckDestinations"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.recheck" /></button>
+</form>
+<f:if condition="{sourceScan.overdue}"><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.scanOverdue" /></p></f:if>
+<f:for each="{capabilities}" as="channel">
+<div class="card mb-3"><div class="card-body">
+<h3><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.{channel.direction}" /> <f:if condition="{channel.existing}">— {channel.name}</f:if></h3>
+<f:if condition="{channel.diagnostics}">
+<p><strong>{channel.diagnostics.capabilityLabel}</strong></p>
+<dl>
+<dt><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.pending" /></dt><dd>{channel.diagnostics.pending}</dd>
+<dt><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.incomplete" /></dt><dd>{channel.diagnostics.incomplete}</dd>
+<dt><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.nextAttempt" /></dt><dd>{channel.diagnostics.nextLabel}</dd>
+<dt><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.accepted" /></dt><dd>{channel.diagnostics.acceptedLabel}</dd>
+<dt><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.oldestAge" /></dt><dd>{channel.diagnostics.oldestAge}</dd>
+</dl>
+<f:if condition="{channel.diagnostics.longOverdue}"><f:then><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.longOverdue" /></p></f:then><f:else><f:if condition="{channel.diagnostics.overdue}"><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.overdue" /></p></f:if></f:else></f:if>
+<f:if condition="{channel.diagnostics.paused}"><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.paused" /></p></f:if>
+<f:if condition="{channel.diagnostics.needsAttention}"><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.attention" /></p></f:if>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="revision" value="{revision}" /><input type="hidden" name="name" value="{channel.name}" />
+<button class="btn btn-default" type="submit" name="action" value="checkCapability"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.check" /></button>
+<button class="btn btn-default" type="submit" name="action" value="retryDelivery"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.retry" /></button>
+<f:if condition="{channel.capability} == 'usage'"><button class="btn btn-default" type="submit" name="action" value="reconcileUsage"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.reconcile" /></button></f:if>
+</form>
+</f:if>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" />
+<input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="capability" />
+<input type="hidden" name="direction" value="{channel.direction}" />
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.name" />
+<f:if condition="{channel.existing}"><f:then><input class="form-control" name="name" value="{channel.name}" readonly="readonly" /></f:then><f:else><input class="form-control" name="name" required="required" /></f:else></f:if>
+</label>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.capability" />
+<select class="form-select" name="capability">
+<f:if condition="{channel.capability} == 'notify'"><f:then>
+<option value="notify" selected="selected"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.notify" /></option>
+<option value="usage"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.usage" /></option>
+</f:then><f:else>
+<option value="usage" selected="selected"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.usage" /></option>
+<option value="notify"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.notify" /></option>
+</f:else></f:if>
+</select></label>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remoteIdentity" />
+<input class="form-control" name="instance" value="{channel.instance}" required="required" autocomplete="off" /></label>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.remoteEnvironment" />
+<input class="form-control" name="environment" value="{channel.environment}" required="required" autocomplete="off" /></label>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.generation" />
+<input class="form-control" name="generation" value="{channel.generation}" required="required" autocomplete="off" /></label>
+<p><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.generationHelp" /></p>
+<f:if condition="{channel.direction} == 'outgoing'">
+<f:then>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.endpoint" />
+<input class="form-control" name="endpoint" value="{channel.endpoint}" required="required" autocomplete="off" /></label>
+</f:then>
+<f:else>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.sites" />
+<textarea class="form-control" name="sites" rows="3">{channel.sites}</textarea></label>
+</f:else>
+</f:if>
+<label class="form-label d-block"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.token" />
+<input class="form-control" name="token" type="password" value="" autocomplete="new-password" /></label>
+<label class="d-block">
+<f:if condition="{channel.enabled}"><f:then><input type="checkbox" name="enabled" value="1" checked="checked" /></f:then><f:else><input type="checkbox" name="enabled" value="1" /></f:else></f:if>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.enabled" /></label>
+<f:if condition="{channel.direction} == 'outgoing'">
+<label class="d-block"><input type="checkbox" name="rotate" value="1" /> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.rotate" /></label>
+</f:if>
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.save" /></button>
+</form>
+<f:if condition="{channel.existing}">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="revision" value="{revision}" />
+<input type="hidden" name="action" value="removeCapability" /><input type="hidden" name="direction" value="{channel.direction}" /><input type="hidden" name="name" value="{channel.name}" />
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remove" /></button>
+</form>
+</f:if>
+</div></div>
+</f:for>
+</f:then>
+<f:else><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.inactive" /></p></f:else>
+</f:if>
+</f:then>
+<f:else>
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="revision" value="{revision}" /><input type="hidden" name="action" value="activateExchange" />
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.activate" /></button>
+</form>
+</f:else>
+</f:if>
+</html>

@@ -13,7 +13,7 @@ final class EditWarnings implements FormDataProviderInterface
 {
     private array $seen = [];
 
-    public function __construct(private readonly LinkReport $report, private readonly FlashMessageService $messages) {}
+    public function __construct(private readonly LinkReport $report, private readonly FlashMessageService $messages, private readonly UsageReport $usage) {}
 
     public function addData(array $result): array
     {
@@ -23,6 +23,16 @@ final class EditWarnings implements FormDataProviderInterface
         $key = $table . ':' . $uid;
         if (isset($this->seen[$key])) { return $result; }
         $this->seen[$key] = true;
+        if ($table === 'pages') {
+            $page = $result['databaseRow'];
+            $liveId = (int)(($page['t3ver_oid'] ?? 0) ?: (($page['l10n_parent'] ?? 0) ?: $uid));
+            $warning = $this->usage->warning($liveId);
+            if ($warning !== null) {
+                $this->messages->getMessageQueueByIdentifier()->enqueue(new FlashMessage(
+                    $warning, Labels::text('usage.title'), ContextualFeedbackSeverity::WARNING,
+                ));
+            }
+        }
         $rows = $this->report->page(0, $table, $uid)['rows'];
         if ($rows) {
             $fields = implode(', ', array_unique(array_column($rows, 'field')));

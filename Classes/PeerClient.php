@@ -102,6 +102,7 @@ final class PeerClient
         }
         if (!is_array($payload) || ($payload['protocol'] ?? null) !== 1
             || ($payload['instance'] ?? null) !== $peer['instance']
+            || (isset($peer['environment']) && ($payload['environment'] ?? null) !== $peer['environment'])
             || !is_array($payload['results'] ?? null) || !array_is_list($payload['results'])
             || count($payload['results']) !== count($urls)
         ) {

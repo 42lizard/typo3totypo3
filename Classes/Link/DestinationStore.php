@@ -105,6 +105,13 @@ final class DestinationStore
             'peer_hash' => $peerHash, 'refresh_error' => $result === null ? 'transient' : ''];
         $updated = $this->connections->getConnectionForTable(self::TABLE)->update(self::TABLE, $data,
             ['reference_key' => $row['reference_key'], 'generation' => $row['generation'], 'lease_token' => $row['lease_token']]);
+        if (!$updated) {
+            // A newer invalidation keeps this lease until the old request finishes.
+            // Release only our own token; retain the newer due time and generation.
+            $this->connections->getConnectionForTable(self::TABLE)->update(self::TABLE,
+                ['lease_token' => '', 'lease_until' => 0],
+                ['reference_key' => $row['reference_key'], 'lease_token' => $row['lease_token']]);
+        }
         if ($updated && ($status !== $row['status'] || $url !== $row['url'])) {
             $this->cache->flushCachesInGroupByTag('pages', self::tag($reference));
         }

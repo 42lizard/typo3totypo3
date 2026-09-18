@@ -78,6 +78,10 @@ final class ConnectionStore
 
     public static function validate(array $config): void
     {
+        if (isset($config['exchange'])) {
+            if (!is_array($config['exchange'])) { throw new \InvalidArgumentException('Invalid exchange configuration.'); }
+            \Lizard\Typo3ToTypo3\Exchange\ExchangeConfiguration::validate($config['exchange']);
+        }
         if (!is_bool($config['enabled'] ?? null) || !PeerConfiguration::isUuid($config['instance'] ?? null)) {
             throw new \InvalidArgumentException('Invalid local identity.');
         }
@@ -93,6 +97,9 @@ final class ConnectionStore
                 || isset($seen[$peer['instance']]) || !preg_match('/^[a-f0-9]{64}$/D', $peer['token'] ?? '')
                 || !is_array($peer['origins'] ?? null) || !$peer['origins'] || count($peer['origins']) > 100) {
                 throw new \InvalidArgumentException('Invalid outgoing connection.');
+            }
+            if (isset($peer['environment']) && !PeerConfiguration::isUuid($peer['environment'])) {
+                throw new \InvalidArgumentException('Invalid resolver environment.');
             }
             $seen[$peer['instance']] = true;
             $endpoint = $peer['endpoint'] ?? '';

@@ -47,3 +47,32 @@ services:
     public: true
   Lizard\Typo3ToTypo3\Backend\ConnectionsController:
     public: true
+  Lizard\Typo3ToTypo3\Exchange\NotificationInbox:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\ExchangeConfiguration:
+    public: true
+  Lizard\Typo3ToTypo3\Middleware\Exchange:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\UsageRegistry:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\SourceUsage:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\SourceUsageHook:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\DeliveryQueue:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\ExchangeClient:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\UsageReporter:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\DestinationChanges:
+    public: true
+  Lizard\Typo3ToTypo3\Exchange\ExchangeWorker:
+    public: true
+  Lizard\Typo3ToTypo3\Command\SyncCommand:
+    tags:
+      - name: console.command
+        command: 'exchange:sync'
+        description: 'Report source usage and deliver asynchronous destination change notifications'
+  Lizard\Typo3ToTypo3\Backend\UsageReport:
+    public: true

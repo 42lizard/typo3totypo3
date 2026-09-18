@@ -66,6 +66,31 @@ final class ConnectionsTest extends FunctionalTestCase
     }
 
     #[Test]
+    public function cloneInitializationRequiresConfirmationAndDisablesInheritedConnections(): void
+    {
+        $previous = getenv('TYPO3_EXCHANGE_ENVIRONMENT');
+        try {
+            $environment = PeerConfiguration::uuid();
+            putenv('TYPO3_EXCHANGE_ENVIRONMENT=' . $environment);
+            $store = $this->get(ConnectionStore::class);
+            $store->import();
+            $controller = $this->get(ConnectionsController::class);
+            $controller->handleRequest($this->request('POST', ['action' => 'activateExchange']));
+            self::assertSame(400, $controller->handleRequest($this->request('POST', ['action' => 'initializeClone']))->getStatusCode());
+            self::assertSame($environment, $store->read()['config']['exchange']['environment']);
+            $clone = PeerConfiguration::uuid();
+            putenv('TYPO3_EXCHANGE_ENVIRONMENT=' . $clone);
+            self::assertSame(200, $controller->handleRequest($this->request('POST', ['action' => 'initializeClone', 'confirmed' => '1']))->getStatusCode());
+            $config = $store->read()['config'];
+            self::assertFalse($config['enabled']);
+            self::assertSame(['environment' => $clone, 'incoming' => [], 'outgoing' => []], $config['exchange']);
+            self::assertSame($this->config['instance'], $config['instance']);
+        } finally {
+            putenv($previous === false ? 'TYPO3_EXCHANGE_ENVIRONMENT' : 'TYPO3_EXCHANGE_ENVIRONMENT=' . $previous);
+        }
+    }
+
+    #[Test]
     public function importPreservesIdentityEncryptsSecretsAndDoesNotFallBackAfterAClone(): void
     {
         $store = $this->get(ConnectionStore::class);
@@ -215,4 +240,37 @@ final class ConnectionsTest extends FunctionalTestCase
         self::assertSame(400, $controller->handleRequest($this->request('POST', ['action' => ['removeOutgoing']]))->getStatusCode());
         self::assertSame(str_repeat('a', 64), $store->read()['config']['outgoing']['peer']['token']);
     }
+    #[Test]
+    public function exchangeActivationAndScopedCredentialsAreExplicitAndNeverRedisplayed(): void
+    {
+        $previous = getenv('TYPO3_EXCHANGE_ENVIRONMENT');
+        $environment = PeerConfiguration::uuid();
+        putenv('TYPO3_EXCHANGE_ENVIRONMENT=' . $environment);
+        try {
+            $store = $this->get(ConnectionStore::class);
+            $store->import();
+            self::assertArrayNotHasKey('exchange', $store->read()['config']);
+            $controller = $this->get(ConnectionsController::class);
+            self::assertSame(200, $controller->handleRequest($this->request('POST', ['action' => 'activateExchange']))->getStatusCode());
+            self::assertSame(['environment' => $environment, 'incoming' => [], 'outgoing' => []], $store->read()['config']['exchange']);
+            $body = ['action' => 'capability', 'direction' => 'outgoing', 'name' => 'stagingUsage',
+                'instance' => PeerConfiguration::uuid(), 'environment' => PeerConfiguration::uuid(),
+                'generation' => PeerConfiguration::uuid(), 'capability' => 'usage',
+                'endpoint' => 'https://peer.example/typo3-exchange/v2'];
+            $response = $controller->handleRequest($this->request('POST', $body));
+            self::assertSame(200, $response->getStatusCode());
+            $channel = $store->read()['config']['exchange']['outgoing']['stagingUsage'];
+            self::assertFalse($channel['enabled']);
+            self::assertStringContainsString($channel['token'], (string)$response->getBody());
+            self::assertStringNotContainsString($channel['token'], (string)$controller->handleRequest($this->request())->getBody());
+            self::assertSame([], $store->read()['config']['exchange']['incoming']);
+            self::assertStringContainsString('Usage and notifications', (string)$response->getBody());
+            $GLOBALS['BE_USER']->user['lang'] = 'de';
+            $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->create('de');
+            self::assertStringContainsString('Nutzung und Benachrichtigungen', (string)$controller->handleRequest($this->request())->getBody());
+        } finally {
+            putenv($previous === false ? 'TYPO3_EXCHANGE_ENVIRONMENT' : 'TYPO3_EXCHANGE_ENVIRONMENT=' . $previous);
+        }
+    }
+
 }

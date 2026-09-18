@@ -2,6 +2,7 @@
 <f:layout name="Module" />
 <f:section name="Content">
     <h1><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:module.title" /></h1>
+    <p><a class="btn btn-default" href="{usageUrl}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.title" /></a></p>
     <p>{intro}</p>
     <form action="{filterUrl}" method="get" class="mb-3">
         <f:for each="{filterParameters}" as="value" key="name">

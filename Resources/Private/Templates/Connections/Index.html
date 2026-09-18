@@ -65,6 +65,7 @@
 </form>
 <f:if condition="{initialized}">
 <f:then>
+<f:render partial="Connections/Exchange" arguments="{_all}" />
 <h2>
 <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.outgoing" />
 </h2>
@@ -96,6 +97,10 @@
 <label class="form-label d-block">
 <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.remoteIdentity" />
 <input class="form-control" type="text" name="instance" value="{peer.instance}" autocomplete="off" />
+</label>
+<label class="form-label d-block">
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:exchange.resolverEnvironment" />
+<input class="form-control" type="text" name="environment" value="{peer.environment}" autocomplete="off" />
 </label>
 <label class="form-label d-block">
 <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:connections.endpoint" />

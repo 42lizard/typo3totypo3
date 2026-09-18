@@ -12,3 +12,6 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['proc
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord'][\Lizard\Typo3ToTypo3\Backend\EditWarnings::class] = [
     'depends' => [\TYPO3\CMS\Backend\Form\FormDataProvider\DatabaseUserPermissionCheck::class],
 ];
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = \Lizard\Typo3ToTypo3\Exchange\SourceUsageHook::class;
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] = \Lizard\Typo3ToTypo3\Exchange\SourceUsageHook::class;

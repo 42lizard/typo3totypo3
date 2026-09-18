@@ -1,0 +1,45 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Module" />
+<f:section name="Content">
+<h1><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.title" /></h1>
+<p><a href="{linksUrl}" class="btn btn-default"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:module.title" /></a></p>
+<p><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.intro" /></p>
+<f:if condition="{incomplete}"><p class="alert alert-warning"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.incompleteView" /></p></f:if>
+<f:if condition="{workspace}"><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.workspace" /></p></f:if>
+<form action="{selectionUrl}" method="get" class="mb-3">
+<input type="hidden" name="view" value="usage" /><input type="hidden" name="id" value="{pageId}" />
+<label><f:if condition="{descendants}"><f:then><input type="checkbox" name="descendants" value="1" checked="checked" /></f:then><f:else><input type="checkbox" name="descendants" value="1" /></f:else></f:if>
+<f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.descendants" /></label>
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:filter.apply" /></button>
+</form>
+<f:if condition="{pageId}"><f:else><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.selectPage" /></p></f:else></f:if>
+<f:if condition="{rows}"><f:then>
+<div class="table-responsive"><table class="table table-striped">
+<thead><tr>
+<th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.destination" /></th>
+<th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.peer" /></th>
+<th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.language" /></th>
+<th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.reported" /></th>
+<th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.state" /></th>
+<f:if condition="{admin}"><th scope="col"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:column.action" /></th></f:if>
+</tr></thead><tbody>
+<f:for each="{rows}" as="row"><tr>
+<td>{row.title}</td><td>{row.peer}</td><td>{row.language}</td><td>{row.reportedLabel}</td><td>{row.stateLabel}</td>
+<f:if condition="{admin}"><td><f:if condition="{row.stale}">
+<form action="{url}" method="post">
+<input type="hidden" name="csrf" value="{csrf}" /><input type="hidden" name="action" value="forgetUsage" />
+<input type="hidden" name="scope" value="{row.scope}" /><input type="hidden" name="page" value="{row.page}" />
+<input type="hidden" name="language" value="{row.language}" /><input type="hidden" name="reported" value="{row.reported}" />
+<label class="d-block"><input type="checkbox" name="confirmed" value="1" required="required" /> <f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.confirmForget" /></label>
+<button class="btn btn-default" type="submit"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.forget" /></button>
+</form>
+</f:if></td></f:if>
+</tr></f:for>
+</tbody></table></div>
+</f:then><f:else><p class="alert alert-info"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:usage.empty" /></p></f:else></f:if>
+<nav aria-label="{f:translate(key: 'LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:report.pages')}">
+<f:if condition="{previous}"><a class="btn btn-default" href="{previous}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.previous" /></a></f:if>
+<f:if condition="{next}"><a class="btn btn-default" href="{next}"><f:translate key="LLL:EXT:typo3_to_typo3/Resources/Private/Language/locallang.xlf:action.next" /></a></f:if>
+</nav>
+</f:section>
+</html>

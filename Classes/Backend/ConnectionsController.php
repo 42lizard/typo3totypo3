@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lizard\Typo3ToTypo3\Backend;
 
 use Lizard\Typo3ToTypo3\Configuration\ConnectionStore;
+use Lizard\Typo3ToTypo3\Exchange\ExchangeConfiguration;
 use Lizard\Typo3ToTypo3\PeerClient;
 use Lizard\Typo3ToTypo3\PeerConfiguration;
 use Psr\Http\Message\ResponseInterface;
@@ -25,6 +26,11 @@ final class ConnectionsController
         private readonly ModuleTemplateFactory $templates,
         private readonly UriBuilder $uris,
         private readonly FormProtectionFactory $forms,
+        private readonly \Lizard\Typo3ToTypo3\Exchange\CapabilityState $capabilityState,
+        private readonly \Lizard\Typo3ToTypo3\Exchange\DeliveryQueue $deliveries,
+        private readonly \Lizard\Typo3ToTypo3\Exchange\SourceUsage $sources,
+        private readonly \Lizard\Typo3ToTypo3\Exchange\UsageReporter $reporter,
+        private readonly \Lizard\Typo3ToTypo3\Exchange\DestinationChanges $changes,
     ) {}
 
     public function handleRequest(ServerRequestInterface $request): ResponseInterface
@@ -69,6 +75,80 @@ final class ConnectionsController
                     $message = Labels::text($result['status'] === 'resolved' ? 'connections.testOk' : 'connections.testFailed');
                 } else {
                     switch ($action) {
+                        case 'checkCapability':
+                        case 'retryDelivery':
+                        case 'reconcileUsage':
+                            $name = self::input($body, 'name');
+                            $channel = $config['exchange']['outgoing'][$name] ?? null;
+                            if (!$channel || !$channel['enabled']) { throw new \InvalidArgumentException('Enable the capability first.'); }
+                            $scope = ExchangeConfiguration::scope($config['exchange'], $channel);
+                            $this->capabilityState->requestCheck($scope);
+                            if ($action === 'retryDelivery') { $this->deliveries->retry($scope); }
+                            if ($action === 'reconcileUsage') {
+                                if ($channel['capability'] !== 'usage') { throw new \InvalidArgumentException('Not a usage capability.'); }
+                                $this->deliveries->restart($scope);
+                                $this->reporter->restart($scope);
+                                $this->sources->requestReconciliation();
+                            }
+                            $message = Labels::text('exchange.queued');
+                            break;
+                        case 'recheckDestinations':
+                            $this->changes->requestRecheck();
+                            $message = Labels::text('exchange.queued');
+                            break;
+                        case 'initializeClone':
+                            if (self::input($body, 'confirmed') !== '1' || empty($config['exchange']['environment'])) {
+                                throw new \InvalidArgumentException('Confirm clone initialization.');
+                            }
+                            $environment = ExchangeConfiguration::initializeClone($config['exchange']['environment']);
+                            foreach ($config['exchange']['outgoing'] as $channel) {
+                                $this->deliveries->restart(ExchangeConfiguration::scope($config['exchange'], $channel));
+                            }
+                            $config['exchange'] = ['environment' => $environment, 'incoming' => [], 'outgoing' => []];
+                            $config['enabled'] = false;
+                            $this->sources->requestReconciliation();
+                            break;
+                        case 'activateExchange':
+                            if (!empty($config['exchange']) || $state['revision'] === '') {
+                                throw new \InvalidArgumentException('Initialize connections first; existing activation cannot be replaced.');
+                            }
+                            $config['exchange'] = ['environment' => ExchangeConfiguration::initializeDeployment(), 'incoming' => [], 'outgoing' => []];
+                            break;
+                        case 'capability':
+                        case 'removeCapability':
+                            if (empty($config['exchange']['environment'])
+                                || $config['exchange']['environment'] !== ExchangeConfiguration::deploymentIdentity()) {
+                                throw new \InvalidArgumentException('Activate this environment first.');
+                            }
+                            $direction = self::input($body, 'direction');
+                            if (!in_array($direction, ['incoming', 'outgoing'], true)) {
+                                throw new \InvalidArgumentException('Invalid capability direction.');
+                            }
+                            $name = self::input($body, 'name');
+                            if ($action === 'removeCapability') {
+                                unset($config['exchange'][$direction][$name]);
+                                break;
+                            }
+                            $old = $config['exchange'][$direction][$name] ?? [];
+                            $channel = ['configurationRevision' => PeerConfiguration::uuid(), 'enabled' => self::input($body, 'enabled') === '1',
+                                'instance' => self::input($body, 'instance'), 'environment' => self::input($body, 'environment'),
+                                'generation' => self::input($body, 'generation'), 'capability' => self::input($body, 'capability'),
+                                'sites' => self::lines(self::input($body, 'sites'))];
+                            $secret = self::input($body, 'token');
+                            if ($secret !== '' && !preg_match('/^[a-f0-9]{64}$/D', $secret)) {
+                                throw new \InvalidArgumentException('Invalid capability credential.');
+                            }
+                            if ($direction === 'outgoing') {
+                                $secret = $secret ?: ($old['token'] ?? '');
+                                if ($secret === '' || self::input($body, 'rotate') === '1') {
+                                    $secret = $token = bin2hex(random_bytes(32));
+                                }
+                                $channel += ['endpoint' => self::input($body, 'endpoint'), 'token' => $secret];
+                            } else {
+                                $channel['tokenHash'] = $secret === '' ? ($old['tokenHash'] ?? '') : hash('sha256', $secret);
+                            }
+                            $config['exchange'][$direction][$name] = $channel;
+                            break;
                         case 'settings':
                             $config['instance'] = $state['revision'] === '' ? self::input($body, 'instance') : $config['instance'];
                             $config['enabled'] = self::input($body, 'enabled') === '1';
@@ -89,6 +169,7 @@ final class ConnectionsController
                             $config['outgoing'][$name] = ['enabled' => self::input($body, 'enabled') === '1',
                                 'instance' => self::input($body, 'instance'), 'endpoint' => self::input($body, 'endpoint'),
                                 'origins' => self::lines(self::input($body, 'origins')), 'token' => $secret];
+                            if (self::input($body, 'environment') !== '') { $config['outgoing'][$name]['environment'] = self::input($body, 'environment'); }
                             break;
                         case 'incoming':
                             $instance = self::input($body, 'instance');
@@ -121,7 +202,7 @@ final class ConnectionsController
         $outgoing = [];
         foreach ($config['outgoing'] ?? [] as $name => $peer) {
             // Explicit allowlist: no saved token or hash is ever assigned to the view.
-            $outgoing[] = ['name' => $name, 'instance' => $peer['instance'], 'endpoint' => $peer['endpoint'],
+            $outgoing[] = ['name' => $name, 'instance' => $peer['instance'], 'environment' => $peer['environment'] ?? '', 'endpoint' => $peer['endpoint'],
                 'origins' => implode("\n", $peer['origins']), 'enabled' => $peer['enabled'], 'existing' => true];
         }
         $incoming = [];
@@ -131,10 +212,29 @@ final class ConnectionsController
         }
         $outgoing[] = ['enabled' => true];
         $incoming[] = ['enabled' => true, 'rate' => 120];
+        $capabilities = [];
+        foreach (['outgoing', 'incoming'] as $direction) {
+            foreach ($config['exchange'][$direction] ?? [] as $name => $channel) {
+                $diagnostics = [];
+                if ($direction === 'outgoing') {
+                    $scope = ExchangeConfiguration::scope($config['exchange'], $channel);
+                    $diagnostics = $this->deliveries->state($scope);
+                    $diagnostics['capabilityLabel'] = Labels::text('exchange.status.' . $this->capabilityState->status($scope));
+                    $diagnostics['nextLabel'] = $diagnostics['nextAttempt'] ? gmdate('Y-m-d H:i:s', $diagnostics['nextAttempt']) . ' UTC' : '';
+                    $diagnostics['acceptedLabel'] = $diagnostics['acceptedAt'] ? gmdate('Y-m-d H:i:s', $diagnostics['acceptedAt']) . ' UTC' : '';
+                }
+                $capabilities[] = ['diagnostics' => $diagnostics] + array_intersect_key($channel, array_flip(['enabled', 'instance', 'environment', 'generation', 'capability', 'endpoint']))
+                    + ['direction' => $direction, 'name' => $name, 'sites' => implode("\n", $channel['sites']), 'existing' => true];
+            }
+            $capabilities[] = ['direction' => $direction, 'enabled' => false, 'generation' => PeerConfiguration::uuid(), 'capability' => 'usage'];
+        }
         $aliases = [];
         foreach ($config['publicAliases'] ?? [] as $old => $new) { $aliases[] = $old . '=' . $new; }
         return $this->render($request, ['revision' => $state['revision'], 'initialized' => $state['revision'] !== '',
             'instance' => $config['instance'] ?: PeerConfiguration::uuid(), 'enabled' => $config['enabled'],
+            'exchangeEnvironment' => $config['exchange']['environment'] ?? '',
+            'exchangeActive' => !empty($config['exchange']['environment']) && $config['exchange']['environment'] === ExchangeConfiguration::deploymentIdentity(),
+            'capabilities' => $capabilities, 'sourceScan' => !empty($config['exchange']) ? $this->sources->state() : [],
             'aliases' => implode("\n", $aliases), 'outgoing' => $outgoing, 'incoming' => $incoming,
             'message' => $message, 'newToken' => $token, 'csrf' => $form->generateToken('exchange-connections')], $status);
     }
